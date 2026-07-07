@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uavsingle.local/schemas/aircraft_udp_collision_v1.schema.json",
+  "title": "Aircraft UDP Collision Packet v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "protocol_version",
+    "packet_type",
+    "timestamp",
+    "sequence",
+    "has_collided",
+    "normal",
+    "impact_point",
+    "position",
+    "penetration_depth",
+    "collision_count",
+    "object_name",
+    "object_id"
+  ],
+  "properties": {
+    "protocol_version": { "const": 1 },
+    "packet_type": { "const": "collision" },
+    "timestamp": { "type": "number" },
+    "sequence": { "type": "integer", "minimum": 0 },
+    "source_id": { "type": "integer", "minimum": 0, "default": 0 },
+    "has_collided": { "type": "boolean" },
+    "normal": { "$ref": "#/$defs/vector3" },
+    "impact_point": { "$ref": "#/$defs/vector3" },
+    "position": { "$ref": "#/$defs/vector3" },
+    "penetration_depth": { "type": "number" },
+    "collision_count": { "type": "integer", "minimum": 0 },
+    "object_name": { "type": "string" },
+    "object_id": { "type": "integer" }
+  },
+  "$defs": {
+    "vector3": {
+      "type": "array",
+      "prefixItems": [{ "type": "number" }, { "type": "number" }, { "type": "number" }],
+      "items": false,
+      "minItems": 3,
+      "maxItems": 3
+    }
+  }
+}

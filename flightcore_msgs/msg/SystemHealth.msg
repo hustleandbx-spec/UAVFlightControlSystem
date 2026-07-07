@@ -1,0 +1,10 @@
+builtin_interfaces/Time stamp
+float64 timestamp_sec
+uint32 sequence
+uint8 source_id
+bool flightcore_alive
+bool imu_valid
+bool gps_valid
+bool command_valid
+uint8 estimator_status
+uint8 gateway_status

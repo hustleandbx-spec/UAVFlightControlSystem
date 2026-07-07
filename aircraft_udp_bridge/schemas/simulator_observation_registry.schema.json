@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uavsingle.local/schemas/simulator_observation_registry_v1.schema.json",
+  "title": "Simulator Observation Registry v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "authority", "current_uav_contract_topics", "observations"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "authority": { "type": "string" },
+    "current_uav_contract_topics": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "observations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": [
+          "simulator",
+          "signal_name",
+          "category",
+          "native_api_or_topic",
+          "native_fields",
+          "units",
+          "frame",
+          "rate_or_update_policy",
+          "evidence_url_or_file",
+          "evidence_quote_or_symbol",
+          "adapter_target",
+          "may_enter_uav_contract",
+          "reason"
+        ],
+        "properties": {
+          "id": { "type": "string" },
+          "simulator": { "enum": ["airsim", "gazebo", "isaac_sim", "pegasus"] },
+          "signal_name": { "type": "string" },
+          "category": {
+            "enum": [
+              "truth",
+              "sensor",
+              "environment",
+              "actuator_feedback",
+              "event",
+              "visual",
+              "unknown"
+            ]
+          },
+          "native_api_or_topic": { "type": "string" },
+          "native_fields": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string" }
+          },
+          "units": { "type": "string" },
+          "frame": { "type": "string" },
+          "rate_or_update_policy": { "type": "string" },
+          "evidence_url_or_file": { "type": "string" },
+          "evidence_quote_or_symbol": { "type": "string" },
+          "adapter_target": { "type": "string" },
+          "packet_type": { "type": "string" },
+          "may_enter_uav_contract": { "type": "boolean" },
+          "contract_status": { "type": "string" },
+          "current_uav_topic": { "type": "string" },
+          "reason": { "type": "string" }
+        }
+      }
+    }
+  }
+}
