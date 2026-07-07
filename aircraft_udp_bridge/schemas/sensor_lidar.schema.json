@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uavsingle.local/schemas/aircraft_udp_sensor_lidar_v1.schema.json",
+  "title": "Aircraft UDP Sensor Lidar Packet v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "protocol_version",
+    "packet_type",
+    "timestamp",
+    "sequence",
+    "point_cloud"
+  ],
+  "properties": {
+    "protocol_version": { "const": 1 },
+    "packet_type": { "const": "sensor_lidar" },
+    "timestamp": { "type": "number" },
+    "sequence": { "type": "integer", "minimum": 0 },
+    "source_id": { "type": "integer", "minimum": 0, "default": 0 },
+    "frame_id": { "type": "string", "default": "lidar_local_ned" },
+    "point_cloud": {
+      "type": "array",
+      "items": { "type": "number" }
+    },
+    "segmentation": {
+      "type": "array",
+      "items": { "type": "integer" }
+    },
+    "pose": { "$ref": "#/$defs/pose" }
+  },
+  "$defs": {
+    "pose": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["position", "orientation"],
+      "properties": {
+        "position": {
+          "type": "array",
+          "prefixItems": [{ "type": "number" }, { "type": "number" }, { "type": "number" }],
+          "items": false,
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "orientation": {
+          "type": "array",
+          "prefixItems": [
+            { "type": "number" },
+            { "type": "number" },
+            { "type": "number" },
+            { "type": "number" }
+          ],
+          "items": false,
+          "minItems": 4,
+          "maxItems": 4
+        }
+      }
+    }
+  }
+}
