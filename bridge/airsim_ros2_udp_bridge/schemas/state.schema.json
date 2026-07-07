@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uavsingle.local/schemas/aircraft_udp_state_v1.schema.json",
+  "title": "Aircraft UDP State Packet v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "protocol_version",
+    "packet_type",
+    "timestamp",
+    "sequence",
+    "position",
+    "orientation",
+    "linear_velocity",
+    "angular_velocity"
+  ],
+  "properties": {
+    "protocol_version": { "const": 1 },
+    "packet_type": { "const": "state" },
+    "timestamp": { "type": "number" },
+    "sequence": { "type": "integer", "minimum": 0 },
+    "frame_id": { "type": "string", "default": "map_ned" },
+    "child_frame_id": { "type": "string", "default": "aircraft_frd" },
+    "position": {
+      "type": "array",
+      "prefixItems": [{ "type": "number" }, { "type": "number" }, { "type": "number" }],
+      "items": false,
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "orientation": {
+      "type": "array",
+      "prefixItems": [
+        { "type": "number" },
+        { "type": "number" },
+        { "type": "number" },
+        { "type": "number" }
+      ],
+      "items": false,
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "linear_velocity": {
+      "type": "array",
+      "prefixItems": [{ "type": "number" }, { "type": "number" }, { "type": "number" }],
+      "items": false,
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "angular_velocity": {
+      "type": "array",
+      "prefixItems": [{ "type": "number" }, { "type": "number" }, { "type": "number" }],
+      "items": false,
+      "minItems": 3,
+      "maxItems": 3
+    }
+  }
+}

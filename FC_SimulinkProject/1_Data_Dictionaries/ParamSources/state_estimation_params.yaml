@@ -1,0 +1,263 @@
+# =============================================================================
+# 状态估计参数 — StateEstDict.sldd 的 YAML 源定义
+# =============================================================================
+# 本文件是 StateEstDict.sldd 的唯一事实来源。
+# 修改参数后运行 create_StateEstDict() 重新生成字典。
+#
+# 三种滤波器共享此字典: ESKF（误差状态）/ EKF（扩展）/ UKF（无迹）
+# 后续将按 SE_ 前缀统一重命名，当前键名保持与模型块一致。
+# =============================================================================
+
+_meta:
+  dict_name: StateEstDict.sldd
+  dict_path: 2_Model/state_estimation
+  description: "状态估计器参数（重力矢量、IMU噪声、GPS噪声、初始协方差、UKF参数）"
+  references:
+    - GlobalTypes.sldd
+    - VehicleDict.sldd
+
+# =============================================================================
+# 通用参数
+# =============================================================================
+
+g_n:
+  rename_to: SE_GRAVITY
+  type: single
+  default: [0.0, 0.0, 9.81]
+  min: null
+  max: null
+  unit: "m/s²"
+  group: general
+  storage_class: ExportedGlobal
+  description: "NED 重力加速度矢量 [g_N, g_E, g_D]。物理常量，不作调参项"
+  tunable_in_flight: false
+  safety_level: routine
+
+imu_sample_time:
+  rename_to: SE_IMU_SAMPLE_TIME
+  type: double
+  default: 0.001
+  min: 0.0001
+  max: 0.02
+  unit: "s"
+  group: general
+  storage_class: ExportedGlobal
+  description: "IMU 调度/采样周期。用于 SampleTime、Rate Transition 和时间戳语义，默认 0.001s = 1000Hz"
+  tunable_in_flight: false
+  safety_level: critical
+
+ekf_predict_dt:
+  rename_to: SE_EKF_PREDICT_DT
+  type: single
+  default: 0.001
+  min: 0.0001
+  max: 0.02
+  unit: "s"
+  group: general
+  storage_class: ExportedGlobal
+  description: "EKF 预测步长数值输入。显式匹配 EKF MATLAB Function 的 single 数值契约"
+  tunable_in_flight: false
+  safety_level: critical
+
+# =============================================================================
+# IMU 噪声 — 功率谱密度 (PSD)
+# =============================================================================
+# 连续时间噪声模型: Q_c = diag(σa²·I₃, σg²·I₃, σba²·I₃, σbg²·I₃)
+# 离散化: Q_d = G · Q_c · G' · Δt
+# PSD 单位: 物理量²/Hz
+
+sigma_acc:
+  rename_to: SE_ACC_NOISE
+  type: single
+  default: 0.001
+  min: 1.0e-6
+  max: 0.1
+  unit: "m²/s⁴/Hz"
+  group: imu_noise
+  storage_class: ExportedGlobal
+  description: "加速度计白噪声 PSD。增大→降低加速度计在融合中的权重"
+  tunable_in_flight: false
+  safety_level: critical
+
+sigma_gyr:
+  rename_to: SE_GYR_NOISE
+  type: single
+  default: 0.0001
+  min: 1.0e-8
+  max: 0.01
+  unit: "rad²/s²/Hz"
+  group: imu_noise
+  storage_class: ExportedGlobal
+  description: "陀螺仪白噪声 PSD。增大→降低陀螺仪在融合中的权重"
+  tunable_in_flight: false
+  safety_level: critical
+
+sigma_ba:
+  rename_to: SE_ACC_BIAS_WALK
+  type: single
+  default: 0.000001
+  min: 1.0e-10
+  max: 0.001
+  unit: "m²/s⁶/Hz"
+  group: imu_noise
+  storage_class: ExportedGlobal
+  description: "加速度计偏置随机游走 PSD。增大→允许偏置估计更快变化但噪声更大"
+  tunable_in_flight: false
+  safety_level: critical
+
+sigma_bg:
+  rename_to: SE_GYR_BIAS_WALK
+  type: single
+  default: 0.0000001
+  min: 1.0e-12
+  max: 0.0001
+  unit: "rad²/s⁴/Hz"
+  group: imu_noise
+  storage_class: ExportedGlobal
+  description: "陀螺仪偏置随机游走 PSD。增大→允许偏置估计更快变化但噪声更大"
+  tunable_in_flight: false
+  safety_level: critical
+
+# =============================================================================
+# GPS 观测噪声标准差 (1σ)
+# =============================================================================
+
+R_pos:
+  rename_to: SE_GPS_POS_NOISE
+  type: single
+  default: 0.2
+  min: 0.01
+  max: 5.0
+  unit: "m"
+  group: gps_noise
+  storage_class: ExportedGlobal
+  description: "GPS 位置观测噪声标准差。增大→降低 GPS 位置在修正中的权重"
+  tunable_in_flight: false
+  safety_level: routine
+
+R_vel:
+  rename_to: SE_GPS_VEL_NOISE
+  type: single
+  default: 0.1
+  min: 0.01
+  max: 2.0
+  unit: "m/s"
+  group: gps_noise
+  storage_class: ExportedGlobal
+  description: "GPS 速度观测噪声标准差。增大→降低 GPS 速度在修正中的权重"
+  tunable_in_flight: false
+  safety_level: routine
+
+# =============================================================================
+# 初始协方差 — 影响滤波器启动阶段的收敛速度
+# =============================================================================
+
+P0_pos:
+  rename_to: SE_P0_POS
+  type: single
+  default: 1.0
+  min: 0.01
+  max: 100.0
+  unit: "m²"
+  group: initial_covariance
+  storage_class: ExportedGlobal
+  description: "初始位置协方差。有GPS时可设小值(0.1)，无GPS时设大值(10)"
+  tunable_in_flight: false
+  safety_level: routine
+
+P0_vel:
+  rename_to: SE_P0_VEL
+  type: single
+  default: 1.0
+  min: 0.01
+  max: 100.0
+  unit: "m²/s²"
+  group: initial_covariance
+  storage_class: ExportedGlobal
+  description: "初始速度协方差。静止启动时设小值"
+  tunable_in_flight: false
+  safety_level: routine
+
+P0_att:
+  rename_to: SE_P0_ATT
+  type: single
+  default: 0.1
+  min: 0.001
+  max: 1.0
+  unit: "rad²"
+  group: initial_covariance
+  storage_class: ExportedGlobal
+  description: "初始姿态协方差。静止水平放置时可为极小值(1e-4)"
+  tunable_in_flight: false
+  safety_level: routine
+
+P0_ba:
+  rename_to: SE_P0_ACC_BIAS
+  type: single
+  default: 0.01
+  min: 0.0001
+  max: 1.0
+  unit: "m²/s⁴"
+  group: initial_covariance
+  storage_class: ExportedGlobal
+  description: "初始加速度计偏置协方差"
+  tunable_in_flight: false
+  safety_level: routine
+
+P0_bg:
+  rename_to: SE_P0_GYR_BIAS
+  type: single
+  default: 0.01
+  min: 0.0001
+  max: 1.0
+  unit: "rad²/s²"
+  group: initial_covariance
+  storage_class: ExportedGlobal
+  description: "初始陀螺仪偏置协方差"
+  tunable_in_flight: false
+  safety_level: routine
+
+# =============================================================================
+# UKF 参数 — 仅 UKF 使用
+# =============================================================================
+# 无迹变换: n=15, λ=α²(n+κ)-n
+# Sigma 点权重: Wm⁰=λ/(n+λ), Wc⁰=Wm⁰+(1-α²+β), Wmⁱ=Wcⁱ=1/(2(n+λ))
+
+ukf_alpha:
+  rename_to: SE_UKF_ALPHA
+  type: single
+  default: 1.0
+  min: 0.001
+  max: 1.0
+  unit: ""
+  group: ukf
+  storage_class: ExportedGlobal
+  description: "UKF Sigma 点散布参数。α=1时Sigma点恰好覆盖±1σ椭球。15维建议α=1"
+  tunable_in_flight: false
+  safety_level: routine
+
+ukf_beta:
+  rename_to: SE_UKF_BETA
+  type: single
+  default: 2.0
+  min: 0.0
+  max: 4.0
+  unit: ""
+  group: ukf
+  storage_class: ExportedGlobal
+  description: "UKF 先验分布参数。高斯分布=2。修正协方差权重峰度"
+  tunable_in_flight: false
+  safety_level: routine
+
+ukf_kappa:
+  rename_to: SE_UKF_KAPPA
+  type: single
+  default: 0.0
+  min: -3.0
+  max: 5.0
+  unit: ""
+  group: ukf
+  storage_class: ExportedGlobal
+  description: "UKF 次级缩放参数。κ=0默认；κ=3-n使λ>0保证正定性"
+  tunable_in_flight: false
+  safety_level: routine

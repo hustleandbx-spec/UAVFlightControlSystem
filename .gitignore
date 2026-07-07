@@ -1,0 +1,37 @@
+# Build and simulation artifacts
+build/
+install/
+log/
+slprj/
+derived/
+matlab_msg_gen/
+__pycache__/
+*.pyc
+*.pyo
+*.pdb
+
+# MATLAB temp artifacts
+.matlab_ros2_temp/
+.cache/
+
+# Simulink code generation
+code_gen/
+rtw/
+_ert*
+
+# Agent config (not project code)
+.codex-config-test/
+.committee.yaml
+
+# IDE / OS
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Episode data (large, not committed)
+episodes/
+
+# WSL mount point (never commit)
+/mnt/
