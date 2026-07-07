@@ -1,0 +1,105 @@
+# =============================================================================
+# 动力系统参数 — PowerSystemDict.sldd 的 YAML 源定义
+# =============================================================================
+# 本文件是 PowerSystemDict.sldd 的唯一事实来源。
+# 修改参数后运行 create_PowerSystemDict() 重新生成字典。
+#
+# 动力模型: 油门 → 稳态转速 → 推力/扭矩 → 电机指令 → 总推力/力矩
+# 后续将按 PS_ 前缀统一重命名，当前键名保持与模型块一致。
+# =============================================================================
+
+_meta:
+  dict_name: PowerSystemDict.sldd
+  dict_path: 2_Model/power_system
+  description: "动力系统参数（电池电压、推力系数、扭矩系数、转子惯量）"
+  references:
+    - GlobalTypes.sldd
+    - VehicleDict.sldd
+
+# =============================================================================
+# 电池
+# =============================================================================
+
+U_bat:
+  rename_to: PS_BAT_VOLTAGE
+  type: single
+  default: 22.2
+  min: 11.1
+  max: 50.4
+  unit: "V"
+  group: battery
+  storage_class: ExportedGlobal
+  description: "电池额定输出电压 (= 6S LiPo: 6×3.7V)"
+  tunable_in_flight: false
+  safety_level: routine
+
+w_bias:
+  rename_to: PS_W_BIAS
+  type: single
+  default: 0.0
+  min: -100.0
+  max: 100.0
+  unit: "rad/s"
+  group: motor
+  storage_class: ExportedGlobal
+  description: "电机转速偏置。补偿油门→转速映射的零点偏移"
+  tunable_in_flight: false
+  safety_level: routine
+
+Cb:
+  rename_to: PS_BAT_FACTOR
+  type: single
+  default: 1.0
+  min: 0.5
+  max: 2.0
+  unit: ""
+  group: battery
+  storage_class: ExportedGlobal
+  description: "电池放电系数/容量校正因子。修正电池内阻电压降对推力的影响"
+
+# =============================================================================
+# 螺旋桨气动系数
+# =============================================================================
+
+Ct:
+  rename_to: PS_CT
+  type: single
+  default: 1.1e-5
+  min: 1.0e-7
+  max: 1.0e-3
+  unit: "N/(rad/s)²"
+  group: propeller
+  storage_class: ExportedGlobal
+  description: "推力系数。T = Ct × ω²。由桨叶直径、螺距、翼型决定"
+  tunable_in_flight: false
+  safety_level: routine
+
+Cm:
+  rename_to: PS_CM
+  type: single
+  default: 1.8e-7
+  min: 1.0e-9
+  max: 1.0e-5
+  unit: "N·m/(rad/s)²"
+  group: propeller
+  storage_class: ExportedGlobal
+  description: "扭矩系数。Q = Cm × ω²。由桨叶气动阻力决定"
+  tunable_in_flight: false
+  safety_level: routine
+
+# =============================================================================
+# 转子惯量
+# =============================================================================
+
+Jrp:
+  rename_to: PS_JRP
+  type: single
+  default: 1.2e-4
+  min: 1.0e-6
+  max: 1.0e-2
+  unit: "kg·m²"
+  group: motor
+  storage_class: ExportedGlobal
+  description: "转子及螺旋桨总转动惯量。τ = Jrp × dω/dt 决定转速响应速度"
+  tunable_in_flight: false
+  safety_level: routine

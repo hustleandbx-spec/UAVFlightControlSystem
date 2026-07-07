@@ -1,0 +1,78 @@
+# =============================================================================
+# 仿真初始条件参数 - SimulationDict.sldd 的 YAML 源定义
+# =============================================================================
+# 本文件只保存仿真场景和初始状态契约，不保存飞控控制律参数。
+# 修改参数后运行 create_SimulationDict() 重新生成字典。
+# =============================================================================
+
+_meta:
+  dict_name: SimulationDict.sldd
+  dict_path: 1_Data_Dictionaries
+  description: "闭环仿真场景、悬停初始状态与估计器初值。"
+  references:
+    - GlobalTypes.sldd
+    - VehicleDict.sldd
+
+SIM_INIT_POS_NED:
+  type: single
+  default: [0.0, 0.0, -2.0]
+  unit: "m"
+  group: hover_initial_condition
+  storage_class: ExportedGlobal
+  description: "闭环悬停仿真的动力学初始位置，NED坐标系，下为正。"
+
+SIM_INIT_VEL_NED:
+  type: single
+  default: [0.0, 0.0, 0.0]
+  unit: "m/s"
+  group: hover_initial_condition
+  storage_class: ExportedGlobal
+  description: "闭环悬停仿真的动力学初始速度。"
+
+SIM_INIT_QUAT_NB:
+  type: single
+  default: [1.0, 0.0, 0.0, 0.0]
+  unit: ""
+  group: hover_initial_condition
+  storage_class: ExportedGlobal
+  description: "闭环悬停仿真的初始姿态四元数 [qw, qx, qy, qz]。"
+
+SIM_INIT_OMEGA_BODY:
+  type: single
+  default: [0.0, 0.0, 0.0]
+  unit: "rad/s"
+  group: hover_initial_condition
+  storage_class: ExportedGlobal
+  description: "闭环悬停仿真的机体系初始角速度。"
+
+SIM_EKF_INIT_STATE:
+  type: single
+  default: [0.0, 0.0, -2.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+  unit: ""
+  group: estimator_initial_condition
+  storage_class: ExportedGlobal
+  description: "EKF 16维初始状态，需与悬停动力学初始位置/速度/姿态一致。"
+
+SIM_EKF_INIT_COV_DIAG:
+  type: single
+  default: [0.25, 0.25, 0.25, 0.04, 0.04, 0.04, 0.01, 0.01, 0.01, 0.0025, 0.0025, 0.0025, 0.0001, 0.0001, 0.0001]
+  unit: ""
+  group: estimator_initial_condition
+  storage_class: ExportedGlobal
+  description: "EKF 初始协方差对角线，15维误差状态。"
+
+SIM_ENABLE_SENSOR_NOISE:
+  type: boolean
+  default: false
+  unit: ""
+  group: simulation_switches
+  storage_class: ExportedGlobal
+  description: "最小闭环悬停验收默认关闭传感器噪声。"
+
+SIM_STOP_TIME:
+  type: double
+  default: 2.0
+  unit: "s"
+  group: simulation_timing
+  storage_class: ExportedGlobal
+  description: "最小闭环悬停验收默认仿真停止时间。"

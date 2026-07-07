@@ -1,0 +1,32 @@
+# Simulink 集中缓存目录
+.cache/
+
+# Simulink 仿真缓存 — 备用：防止未通过项目启动时产生的分散缓存
+**/slprj/
+
+# Simulink 模型加速缓存
+*.slxc
+
+# Simulink Project 构建产物
+derived/
+
+# MATLAB 编译/代码生成产物
+codegen/
+*.mex*
+*.mexa64
+*.mexmaci64
+*.mexw64
+
+# Simulink Project 自动备份
+resources/project/*/backup/
+
+# 操作系统
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

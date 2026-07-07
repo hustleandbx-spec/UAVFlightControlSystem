@@ -1,0 +1,7 @@
+{
+  "enabledPlugins": {
+    "matlab-core@matlab-agentic-toolkit": true,
+    "matlab-software-development@matlab-agentic-toolkit": true,
+    "model-based-design-core@simulink-agentic-toolkit": true
+  }
+}

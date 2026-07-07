@@ -1,0 +1,85 @@
+# =============================================================================
+# 飞行器总体参数 — VehicleDict.sldd 的 YAML 源定义
+# =============================================================================
+# 本文件是 VehicleDict.sldd 的唯一事实来源。
+# 修改参数后运行 create_VehicleDict() 重新生成字典。
+# =============================================================================
+
+_meta:
+  dict_name: VehicleDict.sldd
+  dict_path: 1_Data_Dictionaries
+  description: "飞行器总体参数（质量、惯量、几何、构型）"
+  references: []
+    # VehicleDict 是根字典，不引用其他字典
+
+# =============================================================================
+# 质量与惯量
+# =============================================================================
+
+mass:
+  type: single
+  default: 38.0
+  min: 10.0
+  max: 200.0
+  unit: "kg"
+  group: vehicle_mass_inertia
+  storage_class: ExportedGlobal
+  description: "飞行器总质量（含电池、载荷）"
+
+inertia:
+  type: single
+  default: [0.02, 0.02, 0.04]
+  min: [0.001, 0.001, 0.001]
+  max: [1.0, 1.0, 1.0]
+  unit: "kg·m²"
+  group: vehicle_mass_inertia
+  storage_class: ExportedGlobal
+  description: "转动惯量 [Ixx, Iyy, Izz]。X型四旋翼 Ixx≈Iyy, Izz≈2×Ixx"
+
+g:
+  type: single
+  default: 9.8
+  min: null
+  max: null
+  unit: "m/s²"
+  group: physical_constants
+  storage_class: ExportedGlobal
+  description: "重力加速度。物理常量，不应作为调参项暴露"
+
+# =============================================================================
+# 几何参数
+# =============================================================================
+
+d:
+  type: single
+  default: 0.225
+  min: 0.05
+  max: 2.0
+  unit: "m"
+  group: vehicle_geometry
+  storage_class: ExportedGlobal
+  description: "电机到重心的水平距离（臂长）"
+
+rotor_count:
+  type: uint8
+  default: 4
+  min: 2
+  max: 8
+  unit: ""
+  group: vehicle_geometry
+  storage_class: ExportedGlobal
+  description: "旋翼数量。当前为 X 型四旋翼"
+
+# =============================================================================
+# 构型参数
+# =============================================================================
+
+rotor_config:
+  type: string
+  default: "X"
+  min: null
+  max: null
+  unit: ""
+  group: vehicle_geometry
+  storage_class: ExportedGlobal
+  description: "旋翼布局类型: X (X型), Cross (十字型), Hex_X (X型六旋翼), Hex_Plus (+型六旋翼), Octo_X (X型八旋翼)"

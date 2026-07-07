@@ -1,0 +1,58 @@
+# =============================================================================
+# 命令模块参数 — CommandDict.sldd 的 YAML 源定义
+# =============================================================================
+
+_meta:
+  dict_name: CommandDict.sldd
+  dict_path: 2_Model/command
+  description: "命令源与命令仲裁配置。只保存命令配置，不保存仿真初始状态。"
+  references:
+    - GlobalTypes.sldd
+
+CMD_HOVER_POS_NED:
+  type: single
+  default: [0.0, 0.0, -2.0]
+  unit: "m"
+  group: hover_command
+  storage_class: ExportedGlobal
+  description: "默认悬停位置目标，NED坐标系，下为正。"
+
+CMD_HOVER_VEL_NED:
+  type: single
+  default: [0.0, 0.0, 0.0]
+  unit: "m/s"
+  group: hover_command
+  storage_class: ExportedGlobal
+  description: "默认悬停速度前馈目标。"
+
+CMD_HOVER_YAW:
+  type: single
+  default: 0.0
+  unit: "rad"
+  group: hover_command
+  storage_class: ExportedGlobal
+  description: "默认悬停航向目标。"
+
+CMD_MODE_POS_HOLD:
+  type: uint8
+  default: 1
+  unit: ""
+  group: command_modes
+  storage_class: ExportedGlobal
+  description: "位置保持模式枚举值。"
+
+CMD_HOVER_VALID:
+  type: boolean
+  default: true
+  unit: ""
+  group: hover_command
+  storage_class: ExportedGlobal
+  description: "默认悬停命令有效标志。"
+
+CMD_SAMPLE_TIME:
+  type: double
+  default: 0.001
+  unit: "s"
+  group: scheduler
+  storage_class: ExportedGlobal
+  description: "命令模块显式离散采样时间，与控制器快速路径一致。"

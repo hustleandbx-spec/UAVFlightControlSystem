@@ -1,0 +1,247 @@
+# =============================================================================
+# 传感器噪声参数 — SensorDict.sldd 的 YAML 源定义
+# =============================================================================
+# 本文件是 SensorDict.sldd 的唯一事实来源。
+# 修改参数后运行 create_SensorDict() 重新生成字典。
+#
+# 注意区分：本文件定义传感器模型的物理噪声参数（注入仿真），
+# state_estimation_params.yaml 定义状态估计器的滤波参数（Q/R 矩阵）。
+# 两者可以不同——用于测试滤波器对模型失配的鲁棒性。
+# =============================================================================
+
+_meta:
+  dict_name: SensorDict.sldd
+  dict_path: 2_Model/sensor_model
+  description: "传感器模型噪声与配置参数（IMU噪声/偏置/量程、GPS噪声/更新率）"
+  references:
+    - GlobalTypes.sldd
+    - VehicleDict.sldd
+
+# =============================================================================
+# IMU 传感器参数
+# =============================================================================
+
+IMU_ACC_NOISE:
+  rename_to: IMU_ACC_NOISE
+  type: single
+  default: 0.001
+  min: 0.0001
+  max: 0.1
+  unit: "m/s^2/sqrt(Hz)"
+  group: imu_noise
+  storage_class: ExportedGlobal
+  description: "加速度计白噪声密度。Band-Limited White Noise 块的噪声强度"
+  tunable_in_flight: false
+  safety_level: routine
+
+IMU_GYR_NOISE:
+  rename_to: IMU_GYR_NOISE
+  type: single
+  default: 0.0001
+  min: 0.00001
+  max: 0.01
+  unit: "rad/s/sqrt(Hz)"
+  group: imu_noise
+  storage_class: ExportedGlobal
+  description: "陀螺仪白噪声密度。Band-Limited White Noise 块的噪声强度"
+  tunable_in_flight: false
+  safety_level: routine
+
+IMU_ACC_BIAS:
+  rename_to: IMU_ACC_BIAS
+  type: single
+  default: [0.05, -0.03, 0.08]
+  min: [-1.0, -1.0, -1.0]
+  max: [1.0, 1.0, 1.0]
+  unit: "m/s^2"
+  group: imu_bias
+  storage_class: ExportedGlobal
+  description: "加速度计三轴常值偏置 [x, y, z]"
+  tunable_in_flight: false
+  safety_level: routine
+
+IMU_GYR_BIAS:
+  rename_to: IMU_GYR_BIAS
+  type: single
+  default: [0.001, -0.002, 0.001]
+  min: [-0.1, -0.1, -0.1]
+  max: [0.1, 0.1, 0.1]
+  unit: "rad/s"
+  group: imu_bias
+  storage_class: ExportedGlobal
+  description: "陀螺仪三轴常值偏置 [x, y, z]"
+  tunable_in_flight: false
+  safety_level: routine
+
+IMU_ACC_BIAS_WALK:
+  rename_to: IMU_ACC_BIAS_WALK
+  type: single
+  default: 0.0001
+  min: 0.0
+  max: 0.01
+  unit: "m/s^2/sqrt(s)"
+  group: imu_bias
+  storage_class: ExportedGlobal
+  description: "加速度计偏置随机游走噪声密度"
+  tunable_in_flight: false
+  safety_level: routine
+
+IMU_GYR_BIAS_WALK:
+  rename_to: IMU_GYR_BIAS_WALK
+  type: single
+  default: 0.00001
+  min: 0.0
+  max: 0.001
+  unit: "rad/s/sqrt(s)"
+  group: imu_bias
+  storage_class: ExportedGlobal
+  description: "陀螺仪偏置随机游走噪声密度"
+  tunable_in_flight: false
+  safety_level: routine
+
+IMU_ACC_SCALE:
+  rename_to: IMU_ACC_SCALE
+  type: single
+  default: 0.002
+  min: 0.0
+  max: 0.05
+  unit: "-"
+  group: imu_scale
+  storage_class: ExportedGlobal
+  description: "加速度计比例因子误差（无量纲百分比）。输出 = true * (1 + SCALE)"
+  tunable_in_flight: false
+  safety_level: routine
+
+IMU_GYR_SCALE:
+  rename_to: IMU_GYR_SCALE
+  type: single
+  default: 0.002
+  min: 0.0
+  max: 0.05
+  unit: "-"
+  group: imu_scale
+  storage_class: ExportedGlobal
+  description: "陀螺仪比例因子误差（无量纲百分比）。输出 = true * (1 + SCALE)"
+  tunable_in_flight: false
+  safety_level: routine
+
+IMU_SAT_ACC:
+  rename_to: IMU_SAT_ACC
+  type: single
+  default: 156.96
+  min: 10.0
+  max: 500.0
+  unit: "m/s^2"
+  group: imu_saturation
+  storage_class: ExportedGlobal
+  description: "加速度计量程上限（±值）。默认 ±16g = ±156.96 m/s²"
+  tunable_in_flight: false
+  safety_level: critical
+
+IMU_SAT_GYR:
+  rename_to: IMU_SAT_GYR
+  type: single
+  default: 34.907
+  min: 1.0
+  max: 100.0
+  unit: "rad/s"
+  group: imu_saturation
+  storage_class: ExportedGlobal
+  description: "陀螺仪量程上限（±值）。默认 ±2000°/s = ±34.907 rad/s"
+  tunable_in_flight: false
+  safety_level: critical
+
+IMU_SAMPLE_RATE:
+  rename_to: IMU_SAMPLE_RATE
+  type: single
+  default: 1000
+  min: 100
+  max: 8000
+  unit: "Hz"
+  group: imu_config
+  storage_class: ExportedGlobal
+  description: "IMU 采样率。与模型固定步长一致"
+  tunable_in_flight: false
+  safety_level: critical
+
+# =============================================================================
+# GPS 传感器参数
+# =============================================================================
+
+GPS_POS_H_NOISE:
+  rename_to: GPS_POS_H_NOISE
+  type: single
+  default: 0.5
+  min: 0.01
+  max: 10.0
+  unit: "m"
+  group: gps_noise
+  storage_class: ExportedGlobal
+  description: "GPS 水平位置噪声标准差 (1σ)。N/E 分量共用"
+  tunable_in_flight: false
+  safety_level: routine
+
+GPS_POS_V_NOISE:
+  rename_to: GPS_POS_V_NOISE
+  type: single
+  default: 1.0
+  min: 0.01
+  max: 20.0
+  unit: "m"
+  group: gps_noise
+  storage_class: ExportedGlobal
+  description: "GPS 垂直位置噪声标准差 (1σ)。通常 ≥ 1.5× 水平噪声"
+  tunable_in_flight: false
+  safety_level: routine
+
+GPS_VEL_NOISE:
+  rename_to: GPS_VEL_NOISE
+  type: single
+  default: 0.1
+  min: 0.001
+  max: 5.0
+  unit: "m/s"
+  group: gps_noise
+  storage_class: ExportedGlobal
+  description: "GPS 速度噪声标准差 (1σ)。三轴共用"
+  tunable_in_flight: false
+  safety_level: routine
+
+GPS_SAMPLE_RATE:
+  rename_to: GPS_SAMPLE_RATE
+  type: single
+  default: 5
+  min: 1
+  max: 20
+  unit: "Hz"
+  group: gps_config
+  storage_class: ExportedGlobal
+  description: "GPS 更新率。通过 Rate Transition 实现降频"
+  tunable_in_flight: false
+  safety_level: routine
+
+GPS_REF_LAT:
+  rename_to: GPS_REF_LAT
+  type: single
+  default: 0.0
+  min: -90.0
+  max: 90.0
+  unit: "deg"
+  group: gps_config
+  storage_class: ExportedGlobal
+  description: "Flat Earth to LLA 参考纬度。NED 坐标系原点"
+  tunable_in_flight: false
+  safety_level: routine
+
+GPS_REF_LON:
+  rename_to: GPS_REF_LON
+  type: single
+  default: 10.0
+  min: -180.0
+  max: 180.0
+  unit: "deg"
+  group: gps_config
+  storage_class: ExportedGlobal
+  description: "Flat Earth to LLA 参考经度。NED 坐标系原点"
+  tunable_in_flight: false
+  safety_level: routine

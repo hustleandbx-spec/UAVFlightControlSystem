@@ -1,0 +1,399 @@
+# =============================================================================
+# 飞行控制律参数 — FlightControlDict.sldd 的 YAML 源定义
+# =============================================================================
+# 本文件是 FlightControlDict.sldd 的唯一事实来源。
+# 修改参数后运行 create_FlightControlDict() 重新生成字典。
+#
+# 串级控制链: 位置PID → 速度PID → 加速度→姿态 → 姿态P → 角速率PID → 混控器
+# 后续将按 MC_ 前缀统一重命名，当前键名保持与模型块一致。
+# =============================================================================
+
+_meta:
+  dict_name: FlightControlDict.sldd
+  dict_path: 2_Model/control
+  description: "飞控串级 PID 参数、限幅与混控矩阵"
+  references:
+    - GlobalTypes.sldd
+    - VehicleDict.sldd
+
+# =============================================================================
+# 位置控制环（外环）— Position PID
+# =============================================================================
+
+posP_xy:
+  rename_to: MC_POS_XY_P
+  type: single
+  default: 1.0
+  min: 0.0
+  max: 10.0
+  unit: "(m/s)/m"
+  group: position_control
+  storage_class: ExportedGlobal
+  description: "水平位置 P 增益。位置误差→速度指令。增大加快位置响应，过大引发超调"
+  tunable_in_flight: true
+  increment: 0.1
+  safety_level: routine
+
+posI_xy:
+  rename_to: MC_POS_XY_I
+  type: single
+  default: 0.02
+  min: 0.0
+  max: 2.0
+  unit: ""
+  group: position_control
+  storage_class: ExportedGlobal
+  description: "水平位置 I 增益。消除悬停稳态位置误差和常值风扰"
+  tunable_in_flight: true
+  increment: 0.01
+  safety_level: routine
+
+posD_xy:
+  rename_to: MC_POS_XY_D
+  type: single
+  default: 0.0
+  min: 0.0
+  max: 1.0
+  unit: ""
+  group: position_control
+  storage_class: ExportedGlobal
+  description: "水平位置 D 增益。当前=0（微分由角速率环 D 提供）"
+  tunable_in_flight: true
+  increment: 0.01
+  safety_level: routine
+
+posP_z:
+  rename_to: MC_POS_Z_P
+  type: single
+  default: 2.0
+  min: 0.0
+  max: 20.0
+  unit: "(m/s)/m"
+  group: position_control
+  storage_class: ExportedGlobal
+  description: "高度位置 P 增益。垂直增益 > 水平增益以积极对抗重力偏差"
+  tunable_in_flight: true
+  increment: 0.2
+  safety_level: routine
+
+posI_z:
+  rename_to: MC_POS_Z_I
+  type: single
+  default: 0.1
+  min: 0.0
+  max: 5.0
+  unit: ""
+  group: position_control
+  storage_class: ExportedGlobal
+  description: "高度位置 I 增益"
+  tunable_in_flight: true
+  increment: 0.01
+  safety_level: routine
+
+posD_z:
+  rename_to: MC_POS_Z_D
+  type: single
+  default: 0.0
+  min: 0.0
+  max: 2.0
+  unit: ""
+  group: position_control
+  storage_class: ExportedGlobal
+  description: "高度位置 D 增益。当前=0"
+  tunable_in_flight: true
+  increment: 0.01
+  safety_level: routine
+
+# ---- 位置环输出限幅 ----
+
+maxVel_xy:
+  rename_to: MC_MAX_VEL_XY
+  type: single
+  default: 10.0
+  min: 0.5
+  max: 30.0
+  unit: "m/s"
+  group: position_limits
+  storage_class: ExportedGlobal
+  description: "水平速度指令上限"
+  tunable_in_flight: false
+  safety_level: critical
+
+maxVel_z:
+  rename_to: MC_MAX_VEL_Z
+  type: single
+  default: 5.0
+  min: 0.5
+  max: 15.0
+  unit: "m/s"
+  group: position_limits
+  storage_class: ExportedGlobal
+  description: "垂直速度指令上限"
+  tunable_in_flight: false
+  safety_level: critical
+
+# =============================================================================
+# 速度控制环（中环）— Velocity PID
+# =============================================================================
+
+velP_xy:
+  rename_to: MC_VEL_XY_P
+  type: single
+  default: 0.15
+  min: 0.0
+  max: 2.0
+  unit: "(m/s²)/(m/s)"
+  group: velocity_control
+  storage_class: ExportedGlobal
+  description: "水平速度 P 增益。速度误差→加速度指令"
+  tunable_in_flight: true
+  increment: 0.01
+  safety_level: routine
+
+velI_xy:
+  rename_to: MC_VEL_XY_I
+  type: single
+  default: 0.02
+  min: 0.0
+  max: 1.0
+  unit: ""
+  group: velocity_control
+  storage_class: ExportedGlobal
+  description: "水平速度 I 增益。消除速度稳态误差"
+  tunable_in_flight: true
+  increment: 0.01
+  safety_level: routine
+
+velD_xy:
+  rename_to: MC_VEL_XY_D
+  type: single
+  default: 0.0
+  min: 0.0
+  max: 0.5
+  unit: ""
+  group: velocity_control
+  storage_class: ExportedGlobal
+  description: "水平速度 D 增益。当前=0"
+  tunable_in_flight: true
+  increment: 0.01
+  safety_level: routine
+
+velP_z:
+  rename_to: MC_VEL_Z_P
+  type: single
+  default: 0.2
+  min: 0.0
+  max: 5.0
+  unit: "(m/s²)/(m/s)"
+  group: velocity_control
+  storage_class: ExportedGlobal
+  description: "垂直速度 P 增益"
+  tunable_in_flight: true
+  increment: 0.02
+  safety_level: routine
+
+velI_z:
+  rename_to: MC_VEL_Z_I
+  type: single
+  default: 0.05
+  min: 0.0
+  max: 2.0
+  unit: ""
+  group: velocity_control
+  storage_class: ExportedGlobal
+  description: "垂直速度 I 增益"
+  tunable_in_flight: true
+  increment: 0.01
+  safety_level: routine
+
+velD_z:
+  rename_to: MC_VEL_Z_D
+  type: single
+  default: 0.0
+  min: 0.0
+  max: 1.0
+  unit: ""
+  group: velocity_control
+  storage_class: ExportedGlobal
+  description: "垂直速度 D 增益。当前=0"
+  tunable_in_flight: true
+  increment: 0.01
+  safety_level: routine
+
+# ---- 速度环输出限幅 ----
+
+maxAcc_xy:
+  rename_to: MC_MAX_ACC_XY
+  type: single
+  default: 5.0
+  min: 0.5
+  max: 20.0
+  unit: "m/s²"
+  group: velocity_limits
+  storage_class: ExportedGlobal
+  description: "水平加速度指令上限。限制最大姿态倾斜角"
+  tunable_in_flight: false
+  safety_level: critical
+
+maxAcc_z:
+  rename_to: MC_MAX_ACC_Z
+  type: single
+  default: 10.0
+  min: 0.5
+  max: 30.0
+  unit: "m/s²"
+  group: velocity_limits
+  storage_class: ExportedGlobal
+  description: "垂直加速度指令上限"
+  tunable_in_flight: false
+  safety_level: critical
+
+maxTiltAngle:
+  rename_to: MC_MAX_TILT_ANGLE
+  type: single
+  default: 0.5236
+  min: 0.087
+  max: 0.785
+  unit: "rad"
+  group: velocity_limits
+  storage_class: ExportedGlobal
+  description: "最大允许倾斜角 (= 30° = pi/6 rad)。限制水平加速度对应的最大倾角"
+  tunable_in_flight: false
+  safety_level: critical
+
+# =============================================================================
+# 姿态控制环（内环）— Attitude P only
+# =============================================================================
+
+attP:
+  rename_to: MC_ATT_P
+  type: single
+  default: 8.0
+  min: 0.0
+  max: 30.0
+  unit: "(rad/s)/rad"
+  group: attitude_control
+  storage_class: ExportedGlobal
+  description: "姿态 P 增益。姿态误差→角速率指令。只用P，I由角速率环承担，防止两级积分器串联振荡"
+  tunable_in_flight: true
+  increment: 0.5
+  safety_level: critical
+
+maxRate:
+  rename_to: MC_MAX_RATE
+  type: single
+  default: 3.1416
+  min: 0.5
+  max: 12.56
+  unit: "rad/s"
+  group: attitude_limits
+  storage_class: ExportedGlobal
+  description: "最大角速率指令 (= π rad/s ≈ 180°/s)"
+  tunable_in_flight: false
+  safety_level: critical
+
+# =============================================================================
+# 角速率控制环（最内环）— Rate PID
+# =============================================================================
+
+rateP:
+  rename_to: MC_RATE_P
+  type: single
+  default: 0.15
+  min: 0.0
+  max: 2.0
+  unit: "N·m/(rad/s)"
+  group: rate_control
+  storage_class: ExportedGlobal
+  description: "角速率 P 增益。对抗角速率扰动（突风、重心偏移）"
+  tunable_in_flight: true
+  increment: 0.01
+  safety_level: critical
+
+rateI:
+  rename_to: MC_RATE_I
+  type: single
+  default: 0.02
+  min: 0.0
+  max: 0.5
+  unit: ""
+  group: rate_control
+  storage_class: ExportedGlobal
+  description: "角速率 I 增益。消除角速率稳态误差、补偿常值扰动力矩"
+  tunable_in_flight: true
+  increment: 0.005
+  safety_level: critical
+
+rateD:
+  rename_to: MC_RATE_D
+  type: single
+  default: 0.005
+  min: 0.0
+  max: 0.1
+  unit: ""
+  group: rate_control
+  storage_class: ExportedGlobal
+  description: "角速率 D 增益。提供角速率阻尼，抑制姿态修正时的振荡"
+  tunable_in_flight: true
+  increment: 0.001
+  safety_level: critical
+
+maxTorque:
+  rename_to: MC_MAX_TORQUE
+  type: single
+  default: 2.0
+  min: 0.1
+  max: 10.0
+  unit: "N·m"
+  group: rate_limits
+  storage_class: ExportedGlobal
+  description: "单轴力矩指令上限。在电机饱和前拦截过大指令，确保控制在线性区"
+  tunable_in_flight: false
+  safety_level: critical
+
+# =============================================================================
+# 混控器 — Control Allocation
+# =============================================================================
+
+mixMatrix:
+  rename_to: MC_MIX_MATRIX
+  type: single
+  default:
+    - [1.0, -1.0, -1.0, -1.0]
+    - [1.0,  1.0,  1.0, -1.0]
+    - [1.0,  1.0, -1.0,  1.0]
+    - [1.0, -1.0,  1.0,  1.0]
+  min: null
+  max: null
+  unit: ""
+  group: mixer
+  storage_class: ExportedGlobal
+  description: "X型四旋翼混控矩阵 (4×4)。[F, τx, τy, τz]ᵀ → [m1, m2, m3, m4]ᵀ。列分别对应: 总推力、滚转力矩、俯仰力矩、偏航力矩"
+  tunable_in_flight: false
+  safety_level: critical
+
+motorMin:
+  rename_to: MC_MOTOR_MIN
+  type: single
+  default: 0.05
+  min: 0.0
+  max: 0.5
+  unit: ""
+  group: mixer
+  storage_class: ExportedGlobal
+  description: "电机指令最小值（归一化 0~1）。>0 防止电机停转失去姿态调控能力"
+  tunable_in_flight: false
+  safety_level: critical
+
+motorMax:
+  rename_to: MC_MOTOR_MAX
+  type: single
+  default: 1.0
+  min: 0.5
+  max: 1.0
+  unit: ""
+  group: mixer
+  storage_class: ExportedGlobal
+  description: "电机指令最大值（归一化 0~1）。硬件保护上限"
+  tunable_in_flight: false
+  safety_level: critical
