@@ -100,6 +100,12 @@ class FlightCoreRuntimeAdapter(Node):
             reliability=ReliabilityPolicy.RELIABLE,
             durability=DurabilityPolicy.VOLATILE,
         )
+        actuator_qos = QoSProfile(
+            history=HistoryPolicy.KEEP_LAST,
+            depth=10,
+            reliability=ReliabilityPolicy.BEST_EFFORT,
+            durability=DurabilityPolicy.VOLATILE,
+        )
 
         self._imu_pub = self.create_publisher(
             FcImu, str(self.get_parameter("uav_imu_topic").value), sensor_qos
@@ -133,7 +139,7 @@ class FlightCoreRuntimeAdapter(Node):
             EscCmd,
             str(self.get_parameter("esc_cmd_topic").value),
             self._esc_cmd_callback,
-            command_qos,
+            actuator_qos,
         )
 
         self._imu_sequence = 0
