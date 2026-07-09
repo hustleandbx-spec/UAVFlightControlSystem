@@ -1,8 +1,21 @@
+# colcon build artifacts
 build/
 install/
 log/
+
+# Python cache
 __pycache__/
 *.pyc
 *.pyo
 *.egg-info/
-*.egg/
+*.egg
+
+# Backups
+*.bak
+
+# IDE
+.vscode/
+.idea/
+
+# Episode data (runtime output, not source)
+episodes/

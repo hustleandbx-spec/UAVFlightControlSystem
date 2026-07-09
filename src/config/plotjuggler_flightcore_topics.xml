@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root version="3.0">
+  <use_relative_time_offset enabled="1"/>
+  <previouslyLoaded_Datafiles/>
+  <customMathEquations/>
+  <snippets/>
+  <variables/>
+  <plotmatrix rows="3" columns="1">
+    <plot row="0" col="0">
+      <curve name="/uav/estimator/state.position_ned_m[0]"/>
+      <curve name="/uav/estimator/state.position_ned_m[1]"/>
+      <curve name="/uav/estimator/state.position_ned_m[2]"/>
+    </plot>
+    <plot row="1" col="0">
+      <curve name="/uav/actuator/esc_cmd.motor_cmd[0]"/>
+      <curve name="/uav/actuator/esc_cmd.motor_cmd[1]"/>
+      <curve name="/uav/actuator/esc_cmd.motor_cmd[2]"/>
+      <curve name="/uav/actuator/esc_cmd.motor_cmd[3]"/>
+    </plot>
+    <plot row="2" col="0">
+      <curve name="/uav/health/status.imu_valid"/>
+      <curve name="/uav/health/status.gps_valid"/>
+      <curve name="/uav/health/status.command_valid"/>
+      <curve name="/uav/health/status.flightcore_alive"/>
+    </plot>
+  </plotmatrix>
+</root>
