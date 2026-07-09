@@ -1,0 +1,38 @@
+{
+  "_comment": "UAV 单机飞控 — Episode 静态配置。换机器时改这个文件即可。",
+
+  "paths": {
+    "endpoint_python": "D:\\Miniconda\\envs\\airsim\\python.exe",
+    "matlab": "D:\\MATLAB\\R2025b\\bin\\matlab.exe",
+    "ue4_editor": "D:\\UE4\\UE_4.27\\Engine\\Binaries\\Win64\\UE4Editor.exe",
+    "airsim_project_dir": "D:\\AirsimScene\\CityParkEnvironmentCollec"
+  },
+
+  "wsl": {
+    "distro": "Ubuntu-24.04"
+  },
+
+  "airsim": {
+    "map": "/Game/CityPark/Maps/Overview?game=/Script/AirSim.AirSimGameMode",
+    "rpc_port": 41451,
+    "startup_timeout_sec": 180,
+    "timeout_sec": 10.0,
+    "vehicle_name": "Drone1"
+  },
+
+  "endpoint": {
+    "state_port": 56000,
+    "control_port": 56001,
+    "motor_order": [0, 1, 2, 3],
+    "rate_hz": 50.0,
+    "gps_rate_hz": 5.0,
+    "control_duration_sec": 0.05,
+    "log_period_sec": 2.0
+  },
+
+  "origin": {
+    "lat": 47.641468,
+    "lon": -122.140165,
+    "alt": 122.0
+  }
+}

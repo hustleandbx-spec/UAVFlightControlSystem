@@ -1,0 +1,469 @@
+schema_version: 1
+authority: "Evidence-backed phase-1 simulator observation registry"
+current_uav_contract_topics:
+  - /uav/sensors/imu
+  - /uav/sensors/gps
+  - /uav/cmd/flight
+  - /uav/actuator/esc_cmd
+  - /uav/estimator/state
+  - /uav/health/status
+
+observations:
+  - id: airsim_truth_state
+    simulator: airsim
+    signal_name: multirotor_state
+    category: truth
+    native_api_or_topic: "MultirotorRpcLibClient::getMultirotorState()"
+    native_fields:
+      - collision
+      - kinematics_estimated
+      - gps_location
+      - timestamp
+      - landed_state
+      - rc_data
+      - ready
+      - ready_message
+      - can_arm
+    units: "see Kinematics::State and GeoPoint definitions"
+    frame: "simulator local NED / vehicle body, backend-owned"
+    rate_or_update_policy: "endpoint polling rate"
+    evidence_url_or_file: "https://github.com/microsoft/AirSim/blob/main/AirLib/include/vehicles/multirotor/api/MultirotorCommon.hpp"
+    evidence_quote_or_symbol: "MultirotorState::{collision, kinematics_estimated, gps_location, timestamp, landed_state, rc_data, ready, ready_message, can_arm}"
+    adapter_target: /aircraft/truth/state
+    packet_type: state
+    may_enter_uav_contract: false
+    contract_status: not_allowed
+    reason: "Truth/runtime state is for trace and evaluation, not FlightCore sensor input."
+
+  - id: airsim_imu
+    simulator: airsim
+    signal_name: imu
+    category: sensor
+    native_api_or_topic: "getImuData() / ImuBase::Output"
+    native_fields:
+      - time_stamp
+      - orientation
+      - angular_velocity
+      - linear_acceleration
+    units: "angular_velocity rad/s; linear_acceleration m/s^2; orientation quaternion"
+    frame: "vehicle/body frame from AirSim IMU output"
+    rate_or_update_policy: "endpoint polling rate or AirSim sensor update rate"
+    evidence_url_or_file: "https://github.com/microsoft/AirSim/blob/main/AirLib/include/sensors/imu/ImuBase.hpp"
+    evidence_quote_or_symbol: "ImuBase::Output::{time_stamp, orientation, angular_velocity, linear_acceleration}"
+    adapter_target: /aircraft/sensors/imu
+    packet_type: sensor_imu
+    may_enter_uav_contract: true
+    contract_status: current
+    current_uav_topic: /uav/sensors/imu
+    reason: "IMU is a real FlightCore sensor input and already has a current /uav contract."
+
+  - id: airsim_gps
+    simulator: airsim
+    signal_name: gps
+    category: sensor
+    native_api_or_topic: "getGpsData() / GpsBase::Output"
+    native_fields:
+      - time_stamp
+      - gnss.geo_point
+      - gnss.eph
+      - gnss.epv
+      - gnss.velocity
+      - gnss.fix_type
+      - gnss.time_utc
+      - is_valid
+    units: "latitude/longitude deg; altitude m; velocity m/s; eph/epv unitless"
+    frame: "GeoPoint plus local velocity from AirSim GNSS report"
+    rate_or_update_policy: "endpoint polling rate or AirSim sensor update rate"
+    evidence_url_or_file: "https://github.com/microsoft/AirSim/blob/main/AirLib/include/sensors/gps/GpsBase.hpp"
+    evidence_quote_or_symbol: "GpsBase::Output::{time_stamp, gnss, is_valid}; GnssReport::{geo_point, eph, epv, velocity, fix_type, time_utc}"
+    adapter_target: /aircraft/sensors/gps
+    packet_type: sensor_gps
+    may_enter_uav_contract: true
+    contract_status: current
+    current_uav_topic: /uav/sensors/gps
+    reason: "GPS is a real FlightCore sensor input and already has a current /uav contract."
+
+  - id: airsim_barometer
+    simulator: airsim
+    signal_name: barometer
+    category: sensor
+    native_api_or_topic: "getBarometerData() / BarometerBase::Output"
+    native_fields:
+      - time_stamp
+      - altitude
+      - pressure
+      - qnh
+    units: "altitude m; pressure Pa; qnh native AirSim value"
+    frame: "scalar atmosphere measurement"
+    rate_or_update_policy: "endpoint polling rate or AirSim sensor update rate"
+    evidence_url_or_file: "https://github.com/microsoft/AirSim/blob/main/AirLib/include/sensors/barometer/BarometerBase.hpp"
+    evidence_quote_or_symbol: "BarometerBase::Output::{time_stamp, altitude, pressure, qnh}"
+    adapter_target: /aircraft/sensors/barometer
+    packet_type: sensor_barometer
+    may_enter_uav_contract: true
+    contract_status: future
+    reason: "Barometer is a real sensor candidate, but no current /uav barometer contract exists."
+
+  - id: airsim_magnetometer
+    simulator: airsim
+    signal_name: magnetometer
+    category: sensor
+    native_api_or_topic: "getMagnetometerData() / MagnetometerBase::Output"
+    native_fields:
+      - time_stamp
+      - magnetic_field_body
+      - magnetic_field_covariance
+    units: "magnetic_field_body Gauss; covariance 3x3 native values"
+    frame: "body frame"
+    rate_or_update_policy: "endpoint polling rate or AirSim sensor update rate"
+    evidence_url_or_file: "https://github.com/microsoft/AirSim/blob/main/AirLib/include/sensors/magnetometer/MagnetometerBase.hpp"
+    evidence_quote_or_symbol: "MagnetometerBase::Output::{time_stamp, magnetic_field_body, magnetic_field_covariance}"
+    adapter_target: /aircraft/sensors/magnetometer
+    packet_type: sensor_magnetometer
+    may_enter_uav_contract: true
+    contract_status: future
+    reason: "Magnetometer is a real sensor candidate, but no current /uav magnetometer contract exists."
+
+  - id: airsim_rangefinder
+    simulator: airsim
+    signal_name: distance_sensor
+    category: sensor
+    native_api_or_topic: "getDistanceSensorData() / DistanceSensorData"
+    native_fields:
+      - time_stamp
+      - distance
+      - min_distance
+      - max_distance
+      - relative_pose
+    units: "distance/min/max m; pose native AirSim Pose"
+    frame: "sensor relative pose"
+    rate_or_update_policy: "endpoint polling rate or AirSim sensor update rate"
+    evidence_url_or_file: "https://github.com/microsoft/AirSim/blob/main/AirLib/include/common/CommonStructs.hpp"
+    evidence_quote_or_symbol: "DistanceSensorData::{time_stamp, distance, min_distance, max_distance, relative_pose}"
+    adapter_target: /aircraft/sensors/rangefinder
+    packet_type: sensor_rangefinder
+    may_enter_uav_contract: true
+    contract_status: future
+    reason: "Rangefinder is a real sensor candidate, but no current /uav rangefinder contract exists."
+
+  - id: airsim_lidar
+    simulator: airsim
+    signal_name: lidar
+    category: sensor
+    native_api_or_topic: "getLidarData() / LidarData"
+    native_fields:
+      - time_stamp
+      - point_cloud
+      - pose
+      - segmentation
+    units: "point_cloud m"
+    frame: "lidar local NED coordinates"
+    rate_or_update_policy: "endpoint polling rate or AirSim lidar update rate"
+    evidence_url_or_file: "https://github.com/microsoft/AirSim/blob/main/AirLib/include/common/CommonStructs.hpp"
+    evidence_quote_or_symbol: "LidarData::{time_stamp, point_cloud, pose, segmentation}; point_cloud is local NED meters"
+    adapter_target: /aircraft/sensors/lidar
+    packet_type: sensor_lidar
+    may_enter_uav_contract: false
+    contract_status: trace_only
+    reason: "Lidar may feed perception/evaluation later, but no FlightCore lidar contract exists."
+
+  - id: airsim_camera
+    simulator: airsim
+    signal_name: camera_image
+    category: visual
+    native_api_or_topic: "simGetImages() / ImageCaptureBase::ImageResponse"
+    native_fields:
+      - image_data_uint8
+      - image_data_float
+      - camera_name
+      - camera_position
+      - camera_orientation
+      - time_stamp
+      - message
+      - pixels_as_float
+      - compress
+      - width
+      - height
+      - image_type
+    units: "pixels or depth values according to ImageType"
+    frame: "camera frame plus simulator pose metadata"
+    rate_or_update_policy: "camera request/update policy"
+    evidence_url_or_file: "https://github.com/microsoft/AirSim/blob/main/AirLib/include/common/ImageCaptureBase.hpp"
+    evidence_quote_or_symbol: "ImageResponse::{image_data_uint8, image_data_float, camera_name, camera_position, camera_orientation, time_stamp, message, pixels_as_float, compress, width, height, image_type}"
+    adapter_target: trace-only
+    may_enter_uav_contract: false
+    contract_status: not_allowed
+    reason: "Camera is visual/perception data, not FlightCore control-loop input in the current product contract."
+
+  - id: airsim_collision
+    simulator: airsim
+    signal_name: collision
+    category: event
+    native_api_or_topic: "simGetCollisionInfo() / CollisionInfo"
+    native_fields:
+      - has_collided
+      - normal
+      - impact_point
+      - position
+      - penetration_depth
+      - time_stamp
+      - collision_count
+      - object_name
+      - object_id
+    units: "position vectors m; penetration_depth m; timestamp native AirSim time"
+    frame: "simulator world/local frame"
+    rate_or_update_policy: "event/update polling policy"
+    evidence_url_or_file: "https://github.com/microsoft/AirSim/blob/main/AirLib/include/common/CommonStructs.hpp"
+    evidence_quote_or_symbol: "CollisionInfo::{has_collided, normal, impact_point, position, penetration_depth, time_stamp, collision_count, object_name, object_id}"
+    adapter_target: /aircraft/events/collision
+    packet_type: collision
+    may_enter_uav_contract: false
+    contract_status: not_allowed
+    reason: "Collision is a scenario/fault event and trace signal, not a FlightCore sensor input."
+
+  - id: airsim_wind
+    simulator: airsim
+    signal_name: configured_wind
+    category: environment
+    native_api_or_topic: "simSetWind(Vector3r)"
+    native_fields:
+      - wind
+    units: "m/s"
+    frame: "world frame, NED direction"
+    rate_or_update_policy: "scenario command/update echo only; no AirSim readback API confirmed"
+    evidence_url_or_file: "https://github.com/microsoft/AirSim/blob/main/docs/apis.md"
+    evidence_quote_or_symbol: "docs/apis.md: simSetWind wind is world frame, NED, m/s"
+    adapter_target: /aircraft/environment/wind
+    packet_type: environment
+    may_enter_uav_contract: false
+    contract_status: not_allowed
+    reason: "Wind is scenario/environment state; it must not directly enter FlightCore control input."
+
+  - id: airsim_motor_state
+    simulator: airsim
+    signal_name: rotor_states
+    category: actuator_feedback
+    native_api_or_topic: "getRotorStates() / RotorStates"
+    native_fields:
+      - rotors[].thrust
+      - rotors[].torque_scaler
+      - rotors[].speed
+      - timestamp
+    units: "thrust native SI force; speed native rotor speed; torque_scaler native value"
+    frame: "per-rotor simulator feedback"
+    rate_or_update_policy: "endpoint polling rate"
+    evidence_url_or_file: "https://github.com/microsoft/AirSim/blob/main/AirLib/include/vehicles/multirotor/api/MultirotorCommon.hpp"
+    evidence_quote_or_symbol: "RotorStates::{rotors, timestamp}; RotorParameters::{thrust, torque_scaler, speed}"
+    adapter_target: /aircraft/actuators/motor_state
+    packet_type: motor_state
+    may_enter_uav_contract: false
+    contract_status: trace_only
+    reason: "Real thrust/RPM feedback is trace/evaluation data, not the FlightCore MotorSetpoint output contract."
+
+  - id: airsim_battery
+    simulator: airsim
+    signal_name: battery
+    category: unknown
+    native_api_or_topic: unknown
+    native_fields:
+      - unknown
+    units: unknown
+    frame: not_applicable
+    rate_or_update_policy: unknown
+    evidence_url_or_file: "TODO: official AirSim battery observation API or source symbol not found in phase-1 evidence pass"
+    evidence_quote_or_symbol: "unsupported"
+    adapter_target: unsupported
+    may_enter_uav_contract: false
+    contract_status: unsupported
+    reason: "No field-level evidence for an AirSim simulator battery observation API was captured."
+
+  - id: gazebo_imu
+    simulator: gazebo
+    signal_name: imu
+    category: sensor
+    native_api_or_topic: "Gazebo Sim IMU sensor / gz.msgs.IMU"
+    native_fields:
+      - orientation
+      - angular_velocity
+      - linear_acceleration
+    units: "orientation quaternion; angular_velocity rad/s; linear_acceleration m/s^2"
+    frame: "sensor/link frame"
+    rate_or_update_policy: "sensor update_rate"
+    evidence_url_or_file: "https://gazebosim.org/docs/harmonic/sensors/"
+    evidence_quote_or_symbol: "Gazebo sensors tutorial IMU example uses orientation, angular_velocity, linear_acceleration"
+    adapter_target: /aircraft/sensors/imu
+    packet_type: sensor_imu
+    may_enter_uav_contract: true
+    contract_status: current
+    current_uav_topic: /uav/sensors/imu
+    reason: "IMU can map to the current FlightCore IMU contract after frame/time conversion."
+
+  - id: gazebo_lidar
+    simulator: gazebo
+    signal_name: lidar
+    category: sensor
+    native_api_or_topic: "Gazebo Sim lidar / LaserScan"
+    native_fields:
+      - ranges
+      - intensities
+    units: "ranges m; intensities native values"
+    frame: "sensor frame"
+    rate_or_update_policy: "sensor update_rate"
+    evidence_url_or_file: "https://gazebosim.org/docs/harmonic/sensors/"
+    evidence_quote_or_symbol: "Gazebo sensors tutorial lidar example uses LaserScan ranges and intensities"
+    adapter_target: /aircraft/sensors/lidar
+    may_enter_uav_contract: false
+    contract_status: trace_only
+    reason: "No current FlightCore lidar product contract exists."
+
+  - id: gazebo_contact
+    simulator: gazebo
+    signal_name: contact
+    category: event
+    native_api_or_topic: "Gazebo Sim contact sensor"
+    native_fields:
+      - contacts
+    units: "native contact message values"
+    frame: "collision/link frame"
+    rate_or_update_policy: "sensor update_rate"
+    evidence_url_or_file: "https://gazebosim.org/docs/harmonic/sensors/"
+    evidence_quote_or_symbol: "Gazebo sensors tutorial includes a Contact sensor example"
+    adapter_target: /aircraft/events/collision
+    may_enter_uav_contract: false
+    contract_status: not_allowed
+    reason: "Contact/collision events are scenario/fault and trace data only."
+
+  - id: gazebo_baro_gps_mag_unknown
+    simulator: gazebo
+    signal_name: "barometer_gps_magnetometer"
+    category: unknown
+    native_api_or_topic: unknown
+    native_fields:
+      - unknown
+    units: unknown
+    frame: unknown
+    rate_or_update_policy: unknown
+    evidence_url_or_file: "TODO: field-level Gazebo Sim Harmonic evidence not captured in phase-1 pass"
+    evidence_quote_or_symbol: "unsupported"
+    adapter_target: unsupported
+    may_enter_uav_contract: false
+    contract_status: unsupported
+    reason: "Do not create Gazebo GPS/barometer/magnetometer packet fields until official message evidence is recorded."
+
+  - id: isaac_imu
+    simulator: isaac_sim
+    signal_name: imu
+    category: sensor
+    native_api_or_topic: "Isaac Sim IMU sensor get_current_frame()"
+    native_fields:
+      - lin_acc
+      - ang_vel
+      - orientation
+      - time
+    units: "linear acceleration m/s^2; angular velocity rad/s; orientation quaternion"
+    frame: "sensor frame"
+    rate_or_update_policy: "sensor period / physics update policy"
+    evidence_url_or_file: "https://docs.isaacsim.omniverse.nvidia.com/latest/sensors/isaacsim_sensors_physics_imu.html"
+    evidence_quote_or_symbol: "IMU get_current_frame fields: lin_acc, ang_vel, orientation, time"
+    adapter_target: /aircraft/sensors/imu
+    packet_type: sensor_imu
+    may_enter_uav_contract: true
+    contract_status: current
+    current_uav_topic: /uav/sensors/imu
+    reason: "IMU can map to the current FlightCore IMU contract after frame/time conversion."
+
+  - id: isaac_contact
+    simulator: isaac_sim
+    signal_name: contact
+    category: event
+    native_api_or_topic: "Isaac Sim Contact Sensor get_current_frame()"
+    native_fields:
+      - in_contact
+      - force_matrix
+      - number_of_contacts
+      - time
+    units: "force native Isaac values; time seconds"
+    frame: "sensor/contact frame"
+    rate_or_update_policy: "sensor period / physics update policy"
+    evidence_url_or_file: "https://docs.isaacsim.omniverse.nvidia.com/latest/sensors/isaacsim_sensors_physics_contact.html"
+    evidence_quote_or_symbol: "Contact sensor frame includes in_contact, force_matrix, number_of_contacts, time"
+    adapter_target: /aircraft/events/collision
+    may_enter_uav_contract: false
+    contract_status: not_allowed
+    reason: "Contact is a scenario/fault event and trace signal."
+
+  - id: isaac_visual_sensors
+    simulator: isaac_sim
+    signal_name: "camera_lidar_radar"
+    category: visual
+    native_api_or_topic: "Isaac Sim sensors index"
+    native_fields:
+      - camera
+      - rtx_lidar
+      - rtx_radar
+    units: "sensor-specific"
+    frame: "sensor-specific"
+    rate_or_update_policy: "sensor-specific render/physics policy"
+    evidence_url_or_file: "https://docs.isaacsim.omniverse.nvidia.com/latest/sensors/index.html"
+    evidence_quote_or_symbol: "Isaac Sim Sensors index lists Camera, RTX Lidar, RTX Radar, and physics sensors"
+    adapter_target: trace-only
+    may_enter_uav_contract: false
+    contract_status: trace_only
+    reason: "Visual/perception streams stay outside FlightCore until a product perception contract exists."
+
+  - id: isaac_motor_state_unknown
+    simulator: isaac_sim
+    signal_name: motor_state
+    category: unknown
+    native_api_or_topic: unknown
+    native_fields:
+      - unknown
+    units: unknown
+    frame: unknown
+    rate_or_update_policy: unknown
+    evidence_url_or_file: "TODO: field-level Isaac multirotor motor state API/source not captured in phase-1 pass"
+    evidence_quote_or_symbol: "unsupported"
+    adapter_target: unsupported
+    may_enter_uav_contract: false
+    contract_status: unsupported
+    reason: "Do not infer motor feedback fields from generic Isaac sensor categories."
+
+  - id: pegasus_state
+    simulator: pegasus
+    signal_name: state
+    category: truth
+    native_api_or_topic: "Pegasus State API"
+    native_fields:
+      - position
+      - attitude
+      - linear_body_velocity
+      - angular_velocity
+    units: "position m; velocities native SI; attitude quaternion"
+    frame: "Pegasus/Isaac multirotor state frame"
+    rate_or_update_policy: "Pegasus vehicle update policy"
+    evidence_url_or_file: "https://pegasussimulator.github.io/PegasusSimulator/source/api/state.html"
+    evidence_quote_or_symbol: "Pegasus State API fields: position, attitude, linear_body_velocity, angular_velocity"
+    adapter_target: /aircraft/truth/state
+    packet_type: state
+    may_enter_uav_contract: false
+    contract_status: not_allowed
+    reason: "Pegasus vehicle state is truth/evaluation data unless converted through a real sensor contract."
+
+  - id: pegasus_interfaces
+    simulator: pegasus
+    signal_name: "px4_ardupilot_custom_interfaces"
+    category: unknown
+    native_api_or_topic: "Pegasus documentation"
+    native_fields:
+      - px4_interface
+      - ardupilot_interface
+      - custom_python_control_interface
+    units: "interface-specific"
+    frame: "interface-specific"
+    rate_or_update_policy: "backend-specific"
+    evidence_url_or_file: "https://pegasussimulator.github.io/PegasusSimulator/"
+    evidence_quote_or_symbol: "Pegasus docs describe PX4, ArduPilot, and custom Python control interfaces"
+    adapter_target: unsupported
+    may_enter_uav_contract: false
+    contract_status: unsupported
+    reason: "Interface existence is not field-level sensor evidence."

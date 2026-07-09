@@ -45,7 +45,7 @@ topics:
     direction: subscribe
     msg: flightcore_msgs/FlightCmd
     qos:
-      reliability: reliable
+      reliability: best_effort
       durability: volatile
       history: keep_last
       depth: 5
@@ -63,7 +63,7 @@ topics:
     direction: publish
     msg: flightcore_msgs/EscCmd
     qos:
-      reliability: reliable
+      reliability: best_effort
       durability: volatile
       history: keep_last
       depth: 10
@@ -77,7 +77,7 @@ topics:
     direction: publish
     msg: flightcore_msgs/StateEst
     qos:
-      reliability: reliable
+      reliability: best_effort
       durability: volatile
       history: keep_last
       depth: 10
@@ -99,7 +99,7 @@ topics:
     direction: publish
     msg: flightcore_msgs/SystemHealth
     qos:
-      reliability: reliable
+      reliability: best_effort
       durability: volatile
       history: keep_last
       depth: 10

@@ -1,112 +1,125 @@
 # CLAUDE.md
 
-本文件为 Claude Code 在 UAV 飞控项目中的操作指引，覆盖 Simulink MBD 开发工作流。
+本文件为 Claude Code 在 UAV 单机飞控项目中的操作指引，覆盖 MATLAB/Simulink MBD 开发工作流。架构入口见 [README.md](README.md)，当前执行顺序见 [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md)。
 
 ## 启动行为
 
-每次对话开始时应先读取本项目下的 `.claude/skills/simulink-mbd.md` 加载 MBD 开发技能。
+每次对话开始时先读取本项目下的 `.claude/skills/simulink-mbd.md`，再读取根目录 README、开发计划和相关契约文档。
 
-## 运行规则
+## 启动 MATLAB
 
-### 1. 启动 MATLAB（图形界面模式）
+Windows PowerShell：
 
-```bash
-"D:/Matlab/bin/matlab.exe" -desktop &
+```powershell
+Start-Process -FilePath 'D:\MATLAB\R2025b\bin\matlab.exe' `
+  -ArgumentList '-desktop' `
+  -WorkingDirectory 'D:\Project\UAVSingleFlightControl\FC_SimulinkProject'
 ```
 
-使用 `-desktop` 参数启动图形界面。`-batch` 模式为无界面批处理，执行完会自动退出。
-
-### 2. 打开 Simulink 工程（自动初始化）
+打开工程：
 
 ```matlab
-openProject('FC_SimulinkProject.prj')
+openProject('D:\Project\UAVSingleFlightControl\FC_SimulinkProject\FC_SimulinkProject.prj')
 ```
 
-工程打开时自动执行 `start.m`，完成以下初始化：
-- 设置缓存目录（`.cache/`）
-- 调用 `satk_initialize` 建立 MCP 连接
+工程打开后会执行 `start.m`。如 MCP 未初始化，手动执行：
 
-如 MCP 连接失败，手动执行：
 ```matlab
+addpath(fullfile(getenv('USERPROFILE'), ...
+    '.matlab', 'agentic-toolkits', 'simulink'));
 satk_initialize
+validate_installation
 ```
 
-验证 MCP 连接状态：端口 31515，服务 `matlab-mcp-core-server.exe`。
+`validate_installation` 应在 `satk_initialize` 后执行。连接器端口是动态值，不以固定端口号作为健康判据。
 
-### 3. 验证初始化
+## 验证条件
 
-确认以下项目已就绪：
-- [ ] MATLAB R2024a+ 运行中
-- [ ] MCP 连接正常（端口 31515）
-- [ ] 工程已打开，数据字典已加载
-- [ ] 工作路径为 `FC_SimulinkProject/`
+- MATLAB R2025b 运行中。
+- `validate_installation` 显示 `Result: PASS`。
+- MCP 能成功调用 `model_overview`。
+- 工程已打开，数据字典已加载。
+- 工作路径为 `FC_SimulinkProject/`。
 
-MCP 工具（model_overview、model_read、model_edit 等）仅在 MATLAB 运行且工程打开后可用。离线模式回退到 `unzip -p` 解析 XML。
+当前 Simulink Agentic Toolkit 注册的六个模型工具：
 
-## 项目技能
+| 工具 | 用途 |
+|---|---|
+| `model_overview` | 查看模型/子系统层级结构、接口和信号连线 |
+| `model_read` | 读取块参数、端口、数据类型、MATLAB Function 代码等 |
+| `model_edit` | 增删改模型块和参数 |
+| `model_query_params` | 查询模型参数值 |
+| `model_resolve_params` | 追踪参数引用链 |
+| `model_test` | 运行 Simulink Test 测试用例 |
 
-`.claude/skills/` 目录存放开发技能文件：
-- `simulink-mbd.md` — Simulink MBD 开发模式
+`evaluate_matlab_code`、`check_matlab_code` 属于 MATLAB MCP Core Server 能力，仅在当前 MCP 客户端实际暴露时使用。
 
 ## 常用命令
 
-### MATLAB/Simulink
+重建数据字典：
 
-在 MATLAB（R2025a+）中打开 `FC_SimulinkProject.prj`。`start.m` 在项目打开时自动执行，`shutdown.m` 在关闭时执行。
-
-重建数据字典（YAML 源驱动）：
 ```matlab
-create_GlobalTypes()           % 从 BusConfig/*.m 生成 GlobalTypes.sldd
-create_VehicleDict()           % 从 ParamSources/vehicle_params.yaml 生成 VehicleDict.sldd
-create_FlightControlDict()     % 从 ParamSources/flight_control_params.yaml
-create_PowerSystemDict()       % 从 ParamSources/power_system_params.yaml
-create_StateEstDict()          % 从 ParamSources/state_estimation_params.yaml
+create_GlobalTypes()
+create_VehicleDict()
+create_FlightControlDict()
+create_PowerSystemDict()
+create_StateEstDict()
 ```
 
-**参数修改流程：** 编辑 `1_Data_Dictionaries/ParamSources/<子系统>_params.yaml` → 运行对应的 `create_*Dict()` → `.sldd` 自动更新。禁止直接手工编辑 `.sldd` 条目。
+参数修改流程：
+
+```text
+编辑 1_Data_Dictionaries/ParamSources/<subsystem>_params.yaml
+  -> 运行对应 create_*Dict()
+  -> .sldd 自动更新
+```
+
+禁止直接手工编辑 `.sldd` 条目。
 
 运行测试：
+
 ```matlab
-add_test_suites()       % 创建测试套件
-test_minimal()          % 最小测试运行器
+add_test_suites()
+test_minimal()
 ```
 
-重新配置项目（文件夹注册、快捷方式、标签）：
+重新配置工程：
+
 ```matlab
 configure_project()
 ```
 
-### MATLAB/Simulink MCP 服务
-
-项目通过 **Simulink Agentic Toolkit** MCP 服务连接 Claude Code 与 MATLAB。前置条件：MATLAB 运行中，`FC_SimulinkProject.prj` 已打开。如工具调用失败：`satk_initialize`。
-
-| 工具 | 用途 |
-|------|------|
-| `model_overview` | 查看模型/子系统层级结构、接口和信号连线 |
-| `model_read` | 读取块参数、端口、数据类型、MATLAB Function 代码等 |
-| `model_edit` | 增删改模型块（add_block、delete_block、set_param） |
-| `model_query_params` | 查询模型参数值 |
-| `model_resolve_params` | 追踪参数引用链 |
-| `model_test` | 运行 Simulink Test 测试用例 |
-| `evaluate_matlab_code` | 在 MATLAB 工作区执行代码、运行仿真 |
-| `check_matlab_code` | 对 .m 文件进行静态代码分析 |
-
-离线模式（MATLAB 未运行）：`.slx` 是 ZIP 压缩包，`unzip -p <model>.slx simulink/blockdiagram.xml`。
-
 ## 架构指针
 
-详细架构文档在 `docs/contracts/`：
-- `interface_contract.md` — FlightCore 边界定义（SensorInput/CommandInput/ActuatorOutput/Telemetry）
-- `flightcore_runtime_isolation.md` — Runtime Isolation 契约 + DDS 跨界例外条款
-
-路线图与设计思想在 `docs/vision/`。
+| 内容 | 位置 |
+|---|---|
+| 项目入口和文档体系 | `README.md` |
+| 当前开发计划 | `DEVELOPMENT_PLAN.md` |
+| 路线图与消息思想 | `docs/vision/` |
+| InterfaceContract 与 Runtime Isolation | `docs/contracts/` |
+| ROS2 topic 与 Simulink Bus 映射 | `FC_SimulinkProject/3_Integration/ROS2/` |
+| Windows AirSim endpoint | `bridge/airsim_ros2_udp_bridge/` |
 
 ## 项目强制约束
 
-1. 所有子系统参数通过数据字典管理，不在模型块中硬编码数值
-2. Bus 定义仅在 `1_Data_Dictionaries/BusConfig/` 中维护
-3. 不将 `slprj/`、`derived/` 纳入版本控制
-4. 编写新工具函数前先检查 `5_Tool/` 下已有函数
-5. MCP 工具优先于手动 XML 解析；仅在 MATLAB 未运行时回退到 `unzip -p`
-6. FlightCore 不得出现仿真器/ROS2/DDS API 符号
-7. 契约变更必须先在 `4_Test/` 加测试
+1. 所有子系统参数通过数据字典管理，不在模型块中硬编码数值。
+2. Bus 定义仅在 `1_Data_Dictionaries/BusConfig/` 中维护。
+3. 不将 `slprj/`、`derived/`、`build/`、`install/`、`log/` 纳入版本控制。
+4. 编写新工具函数前先检查 `5_Tool/` 下已有函数。
+5. MCP 工具优先于手动 XML 解析；仅在 MATLAB 未运行时回退到 `.slx` ZIP/XML 检查。
+6. FlightCore 不得出现仿真器、ROS2、DDS、UDP、PlotJuggler、rosbag2 API 或符号。
+7. `/aircraft/*`、truth、可视化和日志数据不得作为 FlightCore 控制闭环输入。
+8. 契约变更必须先在 `4_Test/` 加测试，再改模型、adapter、bridge 或部署代码。
+9. Windows 侧文件在 Windows 仓库维护；WSL ROS2 源码在 WSL 原生 filesystem 维护。
+
+## 当前冻结项
+
+外部 AirSim episode 通过前，不启动：
+
+- 新增 `/uav/*` topic
+- EscCmd/SystemHealth 改名
+- Gazebo/Isaac/Pegasus adapter
+- MAVLink Gateway
+- barometer/magnetometer/rangefinder/lidar 运行时落地
+- RL/视觉/world-model 接口实现
+- C++ FlightBus 中间件
