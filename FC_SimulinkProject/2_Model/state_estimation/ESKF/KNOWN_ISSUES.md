@@ -1,5 +1,7 @@
 # ESKF 模型已知问题
 
+> 范围声明：本文只描述 ESKF 研究模型的已知问题。当前外部闭环主线使用 EKF 集成基线，ESKF 不参与当前 AirSim episode 验收。
+
 ## 问题：MATLAB Function 输出尺寸无法推断
 
 **状态：** 未解决
