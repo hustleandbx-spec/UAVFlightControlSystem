@@ -17,89 +17,44 @@ _meta:
     - VehicleDict.sldd
 
 # =============================================================================
-# 电池
+# AirSim RotorActuator
 # =============================================================================
 
-U_bat:
-  rename_to: PS_BAT_VOLTAGE
+motorMaxThrust_N:
+  rename_to: PS_MOTOR_MAX_THRUST_N
   type: single
-  default: 22.2
-  min: 11.1
-  max: 50.4
-  unit: "V"
-  group: battery
+  default: 4.179446268
+  min: 0.1
+  max: 20.0
+  unit: "N"
+  group: airsim_actuator
   storage_class: ExportedGlobal
-  description: "电池额定输出电压 (= 6S LiPo: 6×3.7V)"
+  description: "AirSim Generic Quad 单旋翼最大推力。normalized command 1.0 线性对应此推力"
   tunable_in_flight: false
-  safety_level: routine
+  safety_level: critical
 
-w_bias:
-  rename_to: PS_W_BIAS
+motorMaxReactionTorque_Nm:
+  rename_to: PS_MOTOR_MAX_REACTION_TORQUE_NM
   type: single
-  default: 0.0
-  min: -100.0
-  max: 100.0
-  unit: "rad/s"
-  group: motor
+  default: 0.055562
+  min: 0.001
+  max: 1.0
+  unit: "N*m"
+  group: airsim_actuator
   storage_class: ExportedGlobal
-  description: "电机转速偏置。补偿油门→转速映射的零点偏移"
+  description: "AirSim Generic Quad 单旋翼最大反扭矩。normalized command 1.0 线性对应此反扭矩"
   tunable_in_flight: false
-  safety_level: routine
+  safety_level: critical
 
-Cb:
-  rename_to: PS_BAT_FACTOR
+motorTimeConstant_s:
+  rename_to: PS_MOTOR_TIME_CONSTANT_S
   type: single
-  default: 1.0
-  min: 0.5
-  max: 2.0
-  unit: ""
-  group: battery
+  default: 0.005
+  min: 0.001
+  max: 0.1
+  unit: "s"
+  group: airsim_actuator
   storage_class: ExportedGlobal
-  description: "电池放电系数/容量校正因子。修正电池内阻电压降对推力的影响"
-
-# =============================================================================
-# 螺旋桨气动系数
-# =============================================================================
-
-Ct:
-  rename_to: PS_CT
-  type: single
-  default: 1.1e-5
-  min: 1.0e-7
-  max: 1.0e-3
-  unit: "N/(rad/s)²"
-  group: propeller
-  storage_class: ExportedGlobal
-  description: "推力系数。T = Ct × ω²。由桨叶直径、螺距、翼型决定"
+  description: "AirSim RotorActuator normalized control signal 一阶低通时间常数"
   tunable_in_flight: false
-  safety_level: routine
-
-Cm:
-  rename_to: PS_CM
-  type: single
-  default: 1.8e-7
-  min: 1.0e-9
-  max: 1.0e-5
-  unit: "N·m/(rad/s)²"
-  group: propeller
-  storage_class: ExportedGlobal
-  description: "扭矩系数。Q = Cm × ω²。由桨叶气动阻力决定"
-  tunable_in_flight: false
-  safety_level: routine
-
-# =============================================================================
-# 转子惯量
-# =============================================================================
-
-Jrp:
-  rename_to: PS_JRP
-  type: single
-  default: 1.2e-4
-  min: 1.0e-6
-  max: 1.0e-2
-  unit: "kg·m²"
-  group: motor
-  storage_class: ExportedGlobal
-  description: "转子及螺旋桨总转动惯量。τ = Jrp × dω/dt 决定转速响应速度"
-  tunable_in_flight: false
-  safety_level: routine
+  safety_level: critical

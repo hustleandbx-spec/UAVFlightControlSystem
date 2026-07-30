@@ -45,22 +45,6 @@ SIM_INIT_OMEGA_BODY:
   storage_class: ExportedGlobal
   description: "闭环悬停仿真的机体系初始角速度。"
 
-SIM_EKF_INIT_STATE:
-  type: single
-  default: [0.0, 0.0, -2.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-  unit: ""
-  group: estimator_initial_condition
-  storage_class: ExportedGlobal
-  description: "EKF 16维初始状态，需与悬停动力学初始位置/速度/姿态一致。"
-
-SIM_EKF_INIT_COV_DIAG:
-  type: single
-  default: [0.25, 0.25, 0.25, 0.04, 0.04, 0.04, 0.01, 0.01, 0.01, 0.0025, 0.0025, 0.0025, 0.0001, 0.0001, 0.0001]
-  unit: ""
-  group: estimator_initial_condition
-  storage_class: ExportedGlobal
-  description: "EKF 初始协方差对角线，15维误差状态。"
-
 SIM_ENABLE_SENSOR_NOISE:
   type: boolean
   default: false

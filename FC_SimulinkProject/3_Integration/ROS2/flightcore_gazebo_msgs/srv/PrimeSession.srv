@@ -1,0 +1,16 @@
+# Establish a new lockstep session from a freshly started Gazebo world.
+uint64 session_id
+---
+bool success
+string status
+uint64 session_id
+uint64 iteration
+int64 sim_time_ns
+float32[3] imu_accel_mps2
+float32[3] imu_gyro_radps
+float64 latitude_deg
+float64 longitude_deg
+float64 altitude_m
+float32[3] velocity_ned_mps
+float32[3] position_ned_m
+float32[4] attitude_quat_wxyz

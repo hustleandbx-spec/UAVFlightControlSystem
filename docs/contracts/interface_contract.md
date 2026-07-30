@@ -108,7 +108,7 @@ Adapter 负责执行器传输、运行时边界限幅策略、后端电机顺序
 
 ROS2 是 Gateway 传输映射，不是 FlightCore 内部事实源。当前 MBD 实现将稳定的 FlightCore Bus 契约映射到 `FC_SimulinkProject/3_Integration/ROS2/flightcore_msgs` 下的自定义 ROS2 消息。
 
-`FC_SimulinkProject/3_Integration/ROS2/topics.yaml` 是 topic 名称、消息类型、QoS 意图和 Bus 字段映射的唯一源。
+`FC_SimulinkProject/3_Integration/ROS2/flightcore_msgs/msg/` 是 MATLAB/Simulink 侧 ROS2 消息定义源。Topic、QoS 和 Bus 字段映射由 `FlightCore_ROS2_loop.slx` 的 ROS2 块及边界适配子系统定义。
 
 最小 ROS2 topic：
 
@@ -124,7 +124,7 @@ ROS2 是 Gateway 传输映射，不是 FlightCore 内部事实源。当前 MBD �
 消息边界规则：
 
 - 传感器和命令消息可以携带 `stamp`、`timestamp_sec`、`sequence`、`source_id`，用于 Gateway 同步和诊断。
-- 只有 `topics.yaml` 中显式映射的字段进入当前 Simulink Bus 对象。
+- 只有 `FlightCore_ROS2_loop.slx` 边界适配子系统显式映射的字段进入当前 Simulink Bus 对象。
 - `RuntimeTruth`、trace、rosbag2 元数据、仿真器身份、DDS 细节和可视化专用字段不得进入 `FlightCore`。
 - `std_msgs/Bool` 和 `std_msgs/Float32` 不是有效的 FlightCore 接口契约；只能作为 FlightCore 边界外的临时诊断消息。
 

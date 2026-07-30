@@ -5,8 +5,6 @@ projectRoot = fileparts(fileparts(mfilename('fullpath')));
 ros2Dir = fullfile(projectRoot, '3_Integration', 'ROS2');
 
 requiredFiles = {
-    fullfile(ros2Dir, 'topics.yaml')
-    fullfile(ros2Dir, 'README.md')
     fullfile(ros2Dir, 'flightcore_msgs', 'package.xml')
     fullfile(ros2Dir, 'flightcore_msgs', 'CMakeLists.txt')
     fullfile(ros2Dir, 'flightcore_msgs', 'msg', 'Imu.msg')
@@ -15,16 +13,13 @@ requiredFiles = {
     fullfile(ros2Dir, 'flightcore_msgs', 'msg', 'EscCmd.msg')
     fullfile(ros2Dir, 'flightcore_msgs', 'msg', 'StateEst.msg')
     fullfile(ros2Dir, 'flightcore_msgs', 'msg', 'SystemHealth.msg')
-    fullfile(ros2Dir, 'scripts', 'build_flightcore_msgs_wsl.sh')
-    fullfile(ros2Dir, 'scripts', 'show_flightcore_topics_wsl.sh')
-    fullfile(ros2Dir, 'scripts', 'pub_sample_topics_wsl.sh')
+    fullfile(ros2Dir, 'generate_flightcore_ros2_messages.m')
     };
 
 for i = 1:numel(requiredFiles)
     assert(isfile(requiredFiles{i}), 'Missing ROS2 contract file: %s', requiredFiles{i});
 end
 
-topicsText = fileread(fullfile(ros2Dir, 'topics.yaml'));
 requiredTopics = {
     '/uav/sensors/imu'
     '/uav/sensors/gps'
@@ -33,9 +28,6 @@ requiredTopics = {
     '/uav/estimator/state'
     '/uav/health/status'
     };
-for i = 1:numel(requiredTopics)
-    assert(contains(topicsText, requiredTopics{i}), 'Missing topic in topics.yaml: %s', requiredTopics{i});
-end
 
 requiredMsgs = {
     'flightcore_msgs/Imu'
@@ -45,9 +37,6 @@ requiredMsgs = {
     'flightcore_msgs/StateEst'
     'flightcore_msgs/SystemHealth'
     };
-for i = 1:numel(requiredMsgs)
-    assert(contains(topicsText, requiredMsgs{i}), 'Missing message in topics.yaml: %s', requiredMsgs{i});
-end
 
 assertMsgFields(fullfile(ros2Dir, 'flightcore_msgs', 'msg', 'Imu.msg'), ...
     {'timestamp_sec', 'sequence', 'source_id', 'valid', 'accel_mps2', 'gyro_radps'});
@@ -56,26 +45,13 @@ assertMsgFields(fullfile(ros2Dir, 'flightcore_msgs', 'msg', 'Gps.msg'), ...
 assertMsgFields(fullfile(ros2Dir, 'flightcore_msgs', 'msg', 'FlightCmd.msg'), ...
     {'timestamp_sec', 'sequence', 'source_id', 'valid', 'mode', 'position_ned_sp_m', 'velocity_ned_sp_mps', 'yaw_sp_rad'});
 assertMsgFields(fullfile(ros2Dir, 'flightcore_msgs', 'msg', 'EscCmd.msg'), ...
-    {'timestamp_sec', 'sequence', 'source_id', 'valid', 'motor_cmd'});
+    {'timestamp_sec', 'sequence', 'source_id', 'armed', 'valid', 'motor_cmd'});
 assertMsgFields(fullfile(ros2Dir, 'flightcore_msgs', 'msg', 'StateEst.msg'), ...
     {'timestamp_sec', 'sequence', 'source_id', 'valid', 'position_ned_m', 'velocity_ned_mps', 'attitude_quat_wxyz', 'status'});
 
-readmeText = fileread(fullfile(ros2Dir, 'README.md'));
-assert(contains(readmeText, 'Simulink ROS Toolbox Subscribe'), ...
-    'README must describe the direct ROS Toolbox subscribe path.');
-assert(contains(readmeText, 'Simulink ROS Toolbox Publish'), ...
-    'README must describe the direct ROS Toolbox publish path.');
-assert(contains(readmeText, 'legacy'), ...
-    'README must mark RuntimeBridge/gateway path as legacy fallback.');
-
-buildScriptText = fileread(fullfile(ros2Dir, 'scripts', 'build_flightcore_msgs_wsl.sh'));
-assert(contains(buildScriptText, 'colcon build --packages-select flightcore_msgs'), ...
-    'WSL build script must build flightcore_msgs by default.');
-assert(~contains(buildScriptText, 'flightcore_ros2_gateway'), ...
-    'WSL mainline build script must not build the legacy gateway.');
-
-assert(contains(readmeText, '~/uavsingle_ros2_ws/config/plotjuggler_flightcore_topics.xml'), ...
-    'README must point PlotJuggler to the WSL runtime config path.');
+matlabGeneratorText = fileread(fullfile(ros2Dir, 'generate_flightcore_ros2_messages.m'));
+assert(contains(matlabGeneratorText, 'ros2genmsg(ros2Dir)'), ...
+    'MATLAB custom-message generator must invoke ros2genmsg for the ROS2 directory.');
 
 modelPath = fullfile(projectRoot, '3_Integration', 'FlightCore_ROS2_loop.slx');
 assert(isfile(modelPath), 'Missing FlightCore_ROS2_loop.slx.');

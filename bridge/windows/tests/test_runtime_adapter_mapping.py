@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-WSL_SRC = ROOT / "wsl" / "packages"
+WSL_SRC = ROOT / "wsl" / "packages" / "airsim"
 sys.path.insert(0, str(WSL_SRC / "aircraft_udp_bridge"))
 sys.path.insert(0, str(WSL_SRC / "flightcore_runtime_adapter"))
 

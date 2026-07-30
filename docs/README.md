@@ -23,9 +23,9 @@
 | 为什么内部事实层不能被 ROS2/MAVLink 定义 | `vision/自建飞控消息系统设计思想.md` |
 | FlightCore Bus 边界是什么 | `contracts/interface_contract.md` |
 | RuntimeAdapter 和 DDS 跨界例外怎么定义 | `contracts/flightcore_runtime_isolation.md` |
-| Windows endpoint 怎么跑 | `../bridge/airsim_ros2_udp_bridge/README.md` |
-| UDP JSON packet 怎么定义 | `../bridge/airsim_ros2_udp_bridge/protocol.md` |
-| ROS2 topic 与 Simulink Bus 怎么映射 | `../FC_SimulinkProject/3_Integration/ROS2/README.md` |
+| Gazebo 联合仿真怎么跑 | `../README.md` 与 WSL `src/packages/gazebo/README.md` |
+| 冻结的 AirSim 历史路线 | Git 历史与 `docs/archive/` |
+| ROS2 topic 与 Simulink Bus 怎么映射 | `contracts/interface_contract.md` |
 | ESKF 研究模型为什么不在当前主线 | `../FC_SimulinkProject/2_Model/state_estimation/ESKF/KNOWN_ISSUES.md` |
 | Claude/Codex 怎么启动 MATLAB/MCP | `../CLAUDE.md` / `../AGENTS.md` |
 | 最近做到了哪里 | PBOS `runtime/handoffs/UAVSingle.md` |
@@ -41,9 +41,12 @@
 
 ## 当前冻结面
 
-外部闭环 episode 通过前，下列内容不得通过文档暗示为当前主线：
+2026-07-30 起 Gazebo standalone ROS 2 codegen 联合仿真是唯一主线。下列内容
+不得通过文档暗示为当前执行路径：
 
-- Gazebo、Isaac、Pegasus runtime adapter
+- AirSim endpoint、UDP bridge、runtime adapter 与跨 Windows–WSL DDS 路线
+- `FlightCore_ROS2_loop` 的 AirSim 开发脚手架扩展
+- Isaac、Pegasus runtime adapter
 - MAVLink Gateway
 - 新增 `/uav/*` topic
 - EscCmd/SystemHealth 改名
@@ -52,4 +55,5 @@
 - RL、视觉、world model 接口实现
 - C++ FlightBus 中间件
 
-这些内容可以作为 vision 或 archive 中的历史/未来方向存在，但不能出现在 README 或开发计划的当前执行路径中。
+这些内容可以作为 vision 或 archive 中的历史/未来方向存在，但不能出现在
+README 的当前执行路径中。解冻必须有新的明确裁决、独立验收目标和测试计划。

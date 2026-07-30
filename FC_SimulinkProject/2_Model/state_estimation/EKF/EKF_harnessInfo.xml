@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<HarnessInformation>
+  <Harness>
+    <P Name="Name">EKF_Harness</P>
+    <P Name="Description">Full EKF model harness for IMU/GPS prediction, first-fix LLA-to-NED preprocessing, and StateEstBus verification.</P>
+    <P Name="CreatedBy">89447</P>
+    <P Name="CreatedOn">Mon Jul 13 10:17:55 2026</P>
+    <P Name="ModifiedBy">89447</P>
+    <P Name="LastSaved">Mon Jul 13 10:28:11 2026</P>
+    <P Name="Owner">bd</P>
+    <P Name="OwnerType">BD_HARNESS</P>
+    <P Name="OwnerPath">.</P>
+    <P Name="Directory"/>
+    <P Name="FileName">EKF_Harness.slx</P>
+    <P Name="SavedVersion">25.2</P>
+    <P Name="HarnessUUID">5a4d1d0e-fd97-4f2c-b94e-715c3db3f7cf</P>
+    <P Name="HarnessConnectionsMap">0,1|0|0,0,0,0||</P>
+    <P Name="VerificationMode">0</P>
+    <P Name="HarnessOwnerCheckSum">0,0,0,0</P>
+    <P Name="RebuildOnOpen">true</P>
+    <P Name="RebuildModelData">true</P>
+    <P Name="Graphical">false</P>
+    <P Name="DriveFcnCallWithTS">true</P>
+    <P Name="ScheduleInitTermReset">false</P>
+    <P Name="AutoShapeInputs">false</P>
+    <P Name="SLDVCompatible">no</P>
+    <P Name="SynchronizationMode">1</P>
+    <P Name="IsImported">false</P>
+    <P Name="PostRebuildCB"/>
+    <P Name="IsCodeContext">false</P>
+    <P Name="SchedulerBlock">0</P>
+    <P Name="SourceTypeString">Test Sequence</P>
+    <P Name="SinkTypeString">Test Assessment</P>
+    <P Name="CustomSourcePath"/>
+    <P Name="CustomSinkPath"/>
+    <P Name="BlockSIDs">2|20|0|0|0|30|0</P>
+    <P Name="OpenGraphs">||||EKF_Harness</P>
+    <P Name="ExistingBuildFolder"/>
+    <P Name="FunctionInterfaceName"/>
+    <P Name="SysArchSUTModel"/>
+  </Harness>
+  <ModelMetadata>
+    <P Name="ModelUUID">6d296563-b0ed-4e47-906c-9c6c5ebbf59e</P>
+    <P Name="OwnerBDName">EKF</P>
+  </ModelMetadata>
+</HarnessInformation>

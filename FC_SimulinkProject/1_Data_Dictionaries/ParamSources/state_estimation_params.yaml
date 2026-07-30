@@ -152,6 +152,22 @@ R_vel:
 # 初始协方差 — 影响滤波器启动阶段的收敛速度
 # =============================================================================
 
+SE_EKF_INIT_STATE:
+  type: single
+  default: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+  unit: ""
+  group: initial_condition
+  storage_class: ExportedGlobal
+  description: "EKF 16维默认名义状态 [Position_NED; Velocity_NED; Attitude_quat_wxyz; AccelBias; GyroBias]。位置以启动点为局部 NED 原点。"
+
+SE_EKF_INIT_COV_DIAG:
+  type: single
+  default: [0.25, 0.25, 0.25, 0.04, 0.04, 0.04, 0.01, 0.01, 0.01, 0.0025, 0.0025, 0.0025, 0.0001, 0.0001, 0.0001]
+  unit: ""
+  group: initial_condition
+  storage_class: ExportedGlobal
+  description: "EKF 15维误差状态初始协方差对角线 [Position; Velocity; Attitude; AccelBias; GyroBias]。"
+
 P0_pos:
   rename_to: SE_P0_POS
   type: single
