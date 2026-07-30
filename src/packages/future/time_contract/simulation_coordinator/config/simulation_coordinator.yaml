@@ -1,0 +1,3 @@
+simulation_coordinator:
+  ros__parameters:
+    physics_dt_ns: 1000000
