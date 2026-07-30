@@ -1,127 +1,139 @@
 # UAV 单机飞控系统
 
-> 自建无人机飞控实验基座。当前目标不是堆更多接口，而是在真实 AirSim -> WSL -> FlightCore 外部闭环中，跑出第一个带 manifest、可回放、可判据化的悬停 episode。
+> 基于 MATLAB/Simulink、ROS 2 Jazzy 与 Gazebo Harmonic 的单机飞控实验基座。
+> 当前唯一开发主线是 `FlightCore_Gazebo_loop` 生成 standalone ROS 2 node，
+> 并在 WSL 内与 Coordinator、Gazebo 进行严格锁步联合仿真。
 
-当前工程以 **四旋翼测试床** 为验收对象：AirSim 默认四旋翼 + `EscCmdBus.MotorCmd[4]`。目标产品仍是 30 kg 级六旋翼，但六旋翼参数和执行器布局尚未进入当前闭环。
+## 当前基线
+
+本项目当前使用 1 kg F450 四旋翼轻量测试床验证 FlightCore 算法、代码生成和
+仿真接口。30 kg 六旋翼仍是目标产品，但其质量、惯量、执行器布局和气动参数
+尚未进入当前 plant，不应将本测试床结果外推为目标机数字孪生结论。
+
+2026-07-30 完整联合仿真基线：
+
+| 项目 | 结果 |
+|---|---:|
+| 固定步长 | 1 ms |
+| 仿真时长 | 15 s / 15000 epoch |
+| IMU | 15001 条，PRIME 后每拍一条 |
+| GPS | 76 条，iteration 0、200、…、15000 |
+| ObservationReady | 15001 条 |
+| ActuatorCommand | 15000 条 |
+| 5 s 指令 | NED 高度设定从 0 阶跃至 -5 m |
+| 15 s 高度 | 5.126 m |
+| 15 s NED 垂向速度 | 0.012 m/s |
+| 最终电机指令 | 四路均为 0.586 |
+| 调度结果 | 无 stall、abort、跳拍或随机卡死 |
+
+5 s 是起飞并进入 5 m 位置保持的指令时刻，不是飞行器已经悬停的时刻。15 s
+结果表明飞行器已在 5 m 附近进入稳定悬停。
 
 ## 当前主线
 
 ```text
-AirSim endpoint (Windows)
-  -> UDP JSON
-  -> aircraft_udp_bridge (WSL2 / ROS2)
-  -> flightcore_runtime_adapter
-  -> /uav/* 六 topic
-  -> FlightCore_ROS2_loop (Windows MATLAB, development exception)
-  -> /uav/actuator/esc_cmd
-  -> UDP actuator packet
-  -> AirSim motor API
+Windows MATLAB / Simulink
+  FlightCore_Gazebo_loop.slx
+  └─ standalone ROS 2 code generation
+                   │ deploy
+                   ▼
+WSL Ubuntu 24.04 / ROS 2 Jazzy
+  generated FlightCore node
+       │ IMU / GPS                   │ ActuatorCommand
+       ▼                             ▼
+  ObservationReady              Gazebo System Plugin
+       │                             │ plant step/result
+       └──── Simulation Coordinator ─┘
+                         │
+                         ├─ sole /clock authority
+                         └─ sole WorldControl authority
 ```
 
-2026-07-07 架构审计后的裁决：
+运行体全部位于 WSL。Windows 只维护 Simulink 模型、数据字典、ROS 2 消息源
+契约、测试和文档，不参与正式联合仿真的实时数据面。
 
-- 在第一个外部闭环 episode 通过前，不新增 `/uav/*` topic、观测族、仿真器适配器或命名迁移。
-- `/uav/*` 六 topic 在开发期允许 DDS 跨 Windows <-> WSL2；这只是 Simulink 开发脚手架，不是终态部署规则。
-- Windows <-> WSL2 的 simulator endpoint 路径仍然是 UDP-only。
-- `/aircraft/*` 观测层只用于运行时适配、日志、评估和 evidence，不进入 FlightCore 控制闭环。
-- 状态流水、完成度和会话交接只写入 PBOS；仓库文档只保留路线、契约、手册和执行计划。
+## 锁步协议
 
-详细执行顺序见 [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md)。
-
-## 架构边界
+每个 epoch 都必须闭合下面的因果链：
 
 ```text
-┌─ Windows ───────────────────────────────────────────────┐
-│ AirSim                                                   │
-│   windows/airsim_udp_endpoint.py (AirSim endpoint)        │
-│        │ UDP 56000: state / sensor_imu / sensor_gps      │
-│        ▲ UDP 56001: actuator motor setpoint              │
-├────────┼─────────────────────────────────────────────────┤
-│ WSL2   ▼                                                 │
-│ aircraft_udp_bridge                                      │
-│        -> /aircraft/{state,imu,gps}                      │
-│ flightcore_runtime_adapter                               │
-│        -> /uav/sensors/imu                               │
-│        -> /uav/sensors/gps                               │
-│        -> /uav/cmd/flight                                │
-│        <- /uav/actuator/esc_cmd                          │
-│        <- /uav/estimator/state                           │
-│        <- /uav/health/status                             │
-├────────║  development DDS exception: /uav/* only          │
-│ Windows▼                                                 │
-│ MATLAB / Simulink                                        │
-│   FlightCore_ROS2_loop                                   │
-│     ROS2 message adapters                                │
-│     FlightCore                                           │
-│       IMU_BUS + GPS_BUS + FlightCmdBus                   │
-│       -> EKF + UAV_FlightControl                         │
-│       -> EscCmdBus + StateEstBus + health                │
-└──────────────────────────────────────────────────────────┘
+/clock(N)
+  -> FlightCore 读取已提交观测并计算 ActuatorCommand(N+1)
+  -> Gazebo 缓存命令并执行精确一个物理步
+  -> Coordinator 发布 CommitRelease(N+1)
+  -> Gazebo 发布本拍 IMU/GPS
+  -> Gazebo 发布 SensorBatchPublished(required_mask)
+  -> FlightCore 异步接收必需传感器
+  -> FlightCore 发布 ObservationReady(received_mask)
+  -> Coordinator 同时等到 ObservationReady 与 step_notify
+  -> /clock(N+1)
 ```
 
-`FlightCore` 只消费和产出 InterfaceContract Bus。仿真器 API、ROS2/DDS 细节、AirSim 连接、WSL 节点生命周期、PlotJuggler、rosbag2、UDP schema 都不能进入 FlightCore 模型或产品数据字典。
-
-## 文档体系
-
-| 层级 | 权威文件 | 职责 |
-|---|---|---|
-| Tier 0 思想层 | [docs/vision/](docs/vision/) | 长期路线、消息哲学、主线约束，低频修改 |
-| Tier 1 契约层 | [docs/contracts/](docs/contracts/) | FlightCore 接口边界、runtime isolation、DDS 例外 |
-| 执行计划 | [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md) | 当前最小行动序列、验收判据、冻结清单 |
-| Tier 2 组件手册 | [bridge/airsim_ros2_udp_bridge/README.md](bridge/airsim_ros2_udp_bridge/README.md), [FC_SimulinkProject/3_Integration/ROS2/README.md](FC_SimulinkProject/3_Integration/ROS2/README.md) | 组件用法、同步规则、构建入口 |
-| Tier 3 状态层 | PBOS `runtime/handoffs/UAVSingle.md` | 进度、会话交接、遗留事项，不在仓库内重复 |
-| Archive | [docs/archive/](docs/archive/) | 审计报告、过期计划、legacy 脚本，只读参考 |
-
-更完整的文档索引见 [docs/README.md](docs/README.md)。
-
-## 仓库结构
+传感器位定义：
 
 ```text
-UAVSingleFlightControl/
-├── README.md
-├── DEVELOPMENT_PLAN.md
-├── CLAUDE.md
-├── AGENTS.md
-├── docs/
-│   ├── README.md
-│   ├── vision/
-│   ├── contracts/
-│   └── archive/
-├── FC_SimulinkProject/
-│   ├── 1_Data_Dictionaries/
-│   ├── 2_Model/
-│   ├── 3_Integration/
-│   ├── 4_Test/
-│   └── 5_Tool/
-└── bridge/
-    └── airsim_ros2_udp_bridge/
+IMU = 0x01
+GPS = 0x02
 ```
 
-WSL ROS2 workspace 是独立 git repo，不在 Windows 仓库中维护源码：
+- PRIME 和 `iteration % 200 == 0`：`required_mask = IMU | GPS`。
+- 其他 iteration：`required_mask = IMU`。
+- GPS 周期只由 Gazebo 计算并随批次发布；FlightCore 和 Coordinator 不复制
+  `gps_rate_divider`，避免多方配置漂移。
+- 非 GPS 更新拍继续保持上一份 GPS 数据，同时模型订阅块 `IsNew=false`。
+- 必需消息缺失时禁止用旧消息冒充；Coordinator watchdog 输出缺失状态并停止
+  整个联合仿真。
 
-```text
-~/uavsingle_ros2_ws/src/
-├── aircraft_udp_bridge
-├── flightcore_msgs
-└── flightcore_runtime_adapter
-```
+这套消费端屏障取代了旧 `SensorReleased`。生产端完成 DDS `publish()` 并不
+等于 generated FlightCore 已执行订阅回调，因此下一拍只能由
+`ObservationReady` 授权。
 
-Windows 仓库中的 `bridge/airsim_ros2_udp_bridge/` 只维护 Windows endpoint 与当前 endpoint 实际使用的 vendored schemas。UDP protocol、schemas 和 ROS2 bridge 的权威源在 WSL 原生 workspace。
+## 源码所有权
 
-## 强制约束
+### Windows 仓库
 
-1. 所有子系统参数通过数据字典管理，不在模型块中硬编码数值。
-2. Bus 定义只在 `FC_SimulinkProject/1_Data_Dictionaries/BusConfig/` 维护。
-3. 契约变更必须先在 `FC_SimulinkProject/4_Test/` 加测试。
-4. FlightCore 不得出现 AirSim、Gazebo、Isaac、ROS2、DDS、UDP、PlotJuggler、rosbag2 等运行时符号。
-5. `truth`、`/aircraft/*` 和可视化数据不得作为 FlightCore 控制闭环输入。
-6. actuator 主路径语义是 normalized motor setpoint，不退化为 throttle/roll/pitch/yaw。
-7. Windows 侧文件在 Windows 仓库维护；WSL 侧源码在 WSL 原生 filesystem 维护；不要用 `/mnt/d` 作为长期 ROS2 workspace。
-8. `build/`、`install/`、`log/`、`slprj/`、`derived/`、`__pycache__/`、episode 产物不纳入版本控制。
+`D:\Project\UAVSingleFlightControl`
 
-## 快速入口
+- `FC_SimulinkProject/1_Data_Dictionaries/`：Bus 与参数权威源。
+- `FC_SimulinkProject/2_Model/`：EKF、控制和动力系统模型。
+- `FC_SimulinkProject/3_Integration/FlightCore_Gazebo_loop.slx`：Gazebo
+  专属 harness。
+- `FC_SimulinkProject/3_Integration/ROS2/flightcore_gazebo_msgs/`：Gazebo
+  锁步消息源契约。
+- `FC_SimulinkProject/4_Test/`：模型与接口契约测试。
 
-MATLAB / Simulink：
+### WSL 仓库
+
+`/home/hustle/uavsingle_ros2_ws`
+
+- `src/packages/common/`：通用 FlightCore ROS 2 消息。
+- `src/packages/gazebo/flightcore_gazebo_loop/`：generated FlightCore node。
+- `src/packages/gazebo/flightcore_simulation_coordinator/`：锁步 Coordinator。
+- `src/packages/gazebo/flightcore_gazebo_system/`：Gazebo System Plugin、world
+  和 launch。
+- `src/packages/gazebo/flightcore_gazebo_msgs/`：WSL 构建使用的锁步接口。
+- `src/scripts/`：WSL 权威运行与就绪检查入口。
+
+不要从 `/mnt/d` 长期构建 ROS 2 包，也不要恢复 Windows `bridge/wsl` 镜像为
+源码权威。
+
+## AirSim 路线：冻结
+
+AirSim 路线已经降为冻结历史资产，不再是当前开发、部署或验收主线：
+
+- `FlightCore_ROS2_loop.slx` 只保留兼容和历史参考，不继续扩展。
+- Windows AirSim UDP endpoint、`/aircraft/*`、`/uav/*`、CycloneDDS 跨
+  Windows–WSL 数据面均不参加当前 Gazebo 联合仿真。
+- 不继续维护 AirSim bridge、runtime adapter、episode orchestration 或新接口。
+- 冻结代码不得反向进入 FlightCore 核心，也不得作为 Gazebo 实现的依赖。
+- 只有新的明确项目裁决、独立验收目标和测试计划同时具备时，才能解冻。
+
+删除旧路径属于路线冻结与权威迁移的一部分；需要历史实现时从 Git 历史读取，
+不要重新复制回现行目录。
+
+## 快速开始
+
+### 1. 打开 MATLAB 工程
 
 ```powershell
 Start-Process -FilePath 'D:\MATLAB\R2025b\bin\matlab.exe' `
@@ -129,28 +141,62 @@ Start-Process -FilePath 'D:\MATLAB\R2025b\bin\matlab.exe' `
   -WorkingDirectory 'D:\Project\UAVSingleFlightControl\FC_SimulinkProject'
 ```
 
-打开工程：
-
 ```matlab
 openProject('D:\Project\UAVSingleFlightControl\FC_SimulinkProject\FC_SimulinkProject.prj')
 ```
 
-WSL ROS2 build：
+### 2. 构建 WSL 工作区
+
+当前工作区采用 isolated install 布局：
 
 ```bash
 cd ~/uavsingle_ros2_ws
 source /opt/ros/jazzy/setup.bash
-colcon build --merge-install --symlink-install
+colcon build --symlink-install
 source install/setup.bash
 ```
 
-Windows mock endpoint：
+### 3. 启动联合仿真
 
-```powershell
-python .\bridge\airsim_ros2_udp_bridge\windows\airsim_udp_endpoint.py `
-  --bridge-host <WSL2_IP> `
-  --mock `
-  --duration-sec 10
+```bash
+ros2 launch flightcore_gazebo_system \
+  flightcore_gazebo_cosim.launch.py \
+  gui:=true max_epochs:=15000 progress_timeout_ms:=10000
 ```
 
-常用操作规则见 [CLAUDE.md](CLAUDE.md)，Codex 差异见 [AGENTS.md](AGENTS.md)。
+另开一个已 source 工作区的 WSL 终端：
+
+```bash
+ros2 service call /flightcore/gazebo/prime_session \
+  flightcore_gazebo_msgs/srv/PrimeSession "{session_id: 2026073001}"
+
+ros2 service call /flightcore/gazebo/start_coordinator \
+  std_srvs/srv/Trigger "{}"
+```
+
+成功日志必须包含：
+
+```text
+PRIME_OBSERVATION_READY ... required_mask=3 received_mask=3
+OBSERVATION_READY_ACK ... iteration=200 required_mask=3 received_mask=3
+COORDINATOR_COMPLETE epochs=15000 final_sim_time_ns=15000000000
+```
+
+任何 `COORDINATOR_STALLED` 或 `COORDINATOR_ABORTED` 都表示本次运行失败。
+
+## 重要维护约束
+
+1. FlightCore 核心不得出现 Gazebo、ROS 2、DDS、UDP 或仿真器 API。
+2. 参数只通过数据字典与参数源维护；Bus 只在 `BusConfig/` 定义。
+3. 接口变化先更新 `4_Test/` 契约测试，再改消息、模型或部署代码。
+4. Coordinator 是唯一 `/clock` 与 Gazebo WorldControl 权威。
+5. 传感器到达与传感器有效性是两个概念；无效消息可以完成传输屏障，但由
+   FlightCore health/control 逻辑决定是否继续控制。
+6. `build/`、`install/`、`log/`、`slprj/`、`derived/`、`__pycache__/` 和
+   episode 产物不得进入 Git。
+7. `flightcore_gazebo_loop` 中的 runtime wrapper 来自 Simulink codegen；
+   当前异步订阅补丁在重新 codegen 后可能被覆盖，重新生成后必须复核
+   `slros2_generic_pubsub.h` 与 `ros2nodeinterface.cpp`。
+
+详细操作规则见 [CLAUDE.md](CLAUDE.md)，文档索引见
+[docs/README.md](docs/README.md)，会话状态与交接以 PBOS 为准。

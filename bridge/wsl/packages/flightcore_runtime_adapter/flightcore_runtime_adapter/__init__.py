@@ -1,1 +1,0 @@
-"""FlightCore runtime adapter package."""

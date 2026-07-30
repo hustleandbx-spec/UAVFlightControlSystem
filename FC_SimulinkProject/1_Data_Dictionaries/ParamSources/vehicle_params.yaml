@@ -18,27 +18,27 @@ _meta:
 
 mass:
   type: single
-  default: 38.0
-  min: 10.0
-  max: 200.0
+  default: 1.0
+  min: 0.5
+  max: 2.0
   unit: "kg"
   group: vehicle_mass_inertia
   storage_class: ExportedGlobal
-  description: "飞行器总质量（含电池、载荷）"
+  description: "AirSim Generic F450 四旋翼总质量（含电池、载荷）。来源: MultiRotorParams::setupFrameGenericQuad"
 
 inertia:
   type: single
-  default: [0.02, 0.02, 0.04]
+  default: [0.006721, 0.008041, 0.014279]
   min: [0.001, 0.001, 0.001]
   max: [1.0, 1.0, 1.0]
   unit: "kg·m²"
   group: vehicle_mass_inertia
   storage_class: ExportedGlobal
-  description: "转动惯量 [Ixx, Iyy, Izz]。X型四旋翼 Ixx≈Iyy, Izz≈2×Ixx"
+  description: "AirSim Generic F450 转动惯量 [Ixx, Iyy, Izz]，由机身盒体、四个 0.055 kg 电机组件及 0.2275 m 臂长按 MultiRotorParams::computeInertiaMatrix 计算"
 
 g:
   type: single
-  default: 9.8
+  default: 9.80665
   min: null
   max: null
   unit: "m/s²"
@@ -50,15 +50,15 @@ g:
 # 几何参数
 # =============================================================================
 
-d:
+motorArmLength_m:
   type: single
-  default: 0.225
+  default: 0.2275
   min: 0.05
   max: 2.0
   unit: "m"
   group: vehicle_geometry
   storage_class: ExportedGlobal
-  description: "电机到重心的水平距离（臂长）"
+  description: "AirSim Generic F450 电机到重心的水平距离（臂长）"
 
 rotor_count:
   type: uint8

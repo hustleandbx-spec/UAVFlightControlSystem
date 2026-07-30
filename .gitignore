@@ -5,6 +5,7 @@ log/
 slprj/
 derived/
 matlab_msg_gen/
+.r2g/
 __pycache__/
 *.pyc
 *.pyo
@@ -35,3 +36,8 @@ episodes/
 
 # WSL mount point (never commit)
 /mnt/
+
+# WSL ROS 2 runtime is maintained in ~/uavsingle_ros2_ws.
+# Keep any local bridge/wsl mirror as ignored historical material; tracked
+# legacy files are deleted by the Gazebo-authority migration.
+/bridge/wsl/

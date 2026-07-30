@@ -146,12 +146,12 @@ def control_rx_loop(
             try:
                 packet = validate_command_packet(decode_datagram(data))
             except ProtocolError as exc:
-                stats["rx_errors"] += 1
+                stats["err"] += 1
                 logging.warning("dropped command packet from %s: %s", addr, exc)
                 continue
             # 校验通过，更新最新指令
             latest_control.update(packet)
-            stats["rx_control"] += 1
+            stats["rx"] += 1
     finally:
         sock.close()
 
@@ -218,8 +218,7 @@ def connect_airsim(
 
 
 # ── 传感器读取 ────────────────────────────────────────────────────────
-# 每个函数调一个 AirSim API，将结果通过 vendor 协议层组装为校验后的 UDP
-# JSON 包。无回退逻辑——API 失败直接抛异常中止。
+# 每个函数调一个 AirSim API，将结果通过 vendor 协议层组装为校验后的 UDP JSON 包。无回退逻辑——API 失败直接抛异常中止。
 
 def read_airsim_state(
     client: Any, vehicle_name: str, sequence: int
@@ -267,7 +266,9 @@ def read_airsim_gps(
     数据路径：gps_data.gnss.geo_point（WGS84 经纬高）+ gps_data.gnss.velocity。
     """
     gps_data = client.getGpsData(vehicle_name=vehicle_name)
-    # AirSim GPS 数据结构：gps_data → gnss → {geo_point, velocity, is_valid, ...}
+    # AirSim GPS 数据结构：
+    #   GpsBase::Output::{time_stamp, gnss, is_valid}          ← is_valid 在此层
+    #   GnssReport::{geo_point, eph, epv, velocity, fix_type, time_utc}
     return make_sensor_gps_packet(
         sequence=sequence,
         source_id=0,
@@ -275,7 +276,7 @@ def read_airsim_gps(
         longitude=float(gps_data.gnss.geo_point.longitude),
         altitude=float(gps_data.gnss.geo_point.altitude),
         velocity=_vec3(gps_data.gnss.velocity),
-        is_valid=bool(gps_data.gnss.is_valid),
+        is_valid=bool(gps_data.is_valid),
     )
 
 
@@ -479,7 +480,7 @@ def run() -> None:
     # 每个统计窗口内的计数器（periodic 日志后归零）
     stats = {
         "tx_state": 0, "tx_imu": 0, "tx_gps": 0,
-        "rx_control": 0, "rx_errors": 0, "control_errors": 0,
+        "rx": 0, "err": 0,
     }
     # 控制指令接收线程：daemon=True 确保主线程退出时自动终止
     rx_thread = threading.Thread(
@@ -561,26 +562,17 @@ def run() -> None:
                     )
                 except Exception as exc:
                     # 控制异常不中断主循环——传感器数据继续发送
-                    stats["control_errors"] += 1
+                    stats["err"] += 1
                     logging.error("failed to apply control: %s", exc)
 
-            # ── 周期性统计输出（频率 + 错误计数） ──
-            # 每隔 log_period_sec 输出一次速率统计，帮助监控数据流的健康状态
+            # ── 周期性统计输出（对齐 WSL bridge 格式） ──
             if now - last_log_time >= log_period:
-                elapsed = now - last_log_time
                 logging.info(
-                    "udp tx_state=%d tx_imu=%d tx_gps=%d (%.1f Hz), "
-                    "rx_control=%d, rx_errors=%d, control_errors=%d",
+                    "tx_state=%d tx_imu=%d tx_gps=%d rx=%d err=%d",
                     stats["tx_state"], stats["tx_imu"], stats["tx_gps"],
-                    stats["tx_state"] / elapsed,
-                    stats["rx_control"], stats["rx_errors"],
-                    stats["control_errors"],
+                    stats["rx"], stats["err"],
                 )
-                # 计数器归零，开始下一个统计窗口
-                stats.update(
-                    tx_state=0, tx_imu=0, tx_gps=0,
-                    rx_control=0, rx_errors=0, control_errors=0,
-                )
+                stats.update(tx_state=0, tx_imu=0, tx_gps=0, rx=0, err=0)
                 last_log_time = now
     except KeyboardInterrupt:
         logging.info("stopping")

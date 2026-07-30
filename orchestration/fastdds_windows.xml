@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  FastDDS Windows 侧配置：限制只走 WSL 互通网卡。
+
+  背景：
+    MATLAB R2025b 内置 ROS2 Toolbox 默认使用 rmw_fastrtps_cpp（FastDDS）。
+    Windows 11 + WSL2 + Hyper-V 环境存在多张虚拟网卡（WSL 防火墙、Default
+    Switch、Docker、VPN 等），FastDDS 默认枚举全部网卡并逐一绑定 UDP socket。
+    某个异常虚拟适配器的 socket 操作可能阻塞，导致 ros2node() 在 Simulink
+    模型初始化的 Start 回调中卡死，Simulink 状态机永远停在 'initializing'。
+
+  策略：
+    - 仅绑定 vEthernet (WSL (Hyper-V firewall)) 这张与 WSL2 互通的网卡
+    - 禁用内置传输，只启用自定义 UDPv4 传输，避免回退到其他接口
+    - participant profile 标记 is_default_profile="true"，所有隐式创建的
+      DomainParticipant（包括 Simulink ROS2 块内部创建的）自动继承此配置
+
+  IP 说明：
+    172.26.80.1 是 Hyper-V WSL 虚拟交换机在 Windows 宿主侧的网关地址，
+    只要不手动重建虚拟交换机，IP 保持固定。WSL2 侧 IP 可能经 DHCP 变化，
+    但始终在同一 /20 子网内，不影响 DDS 发现。
+-->
+<profiles xmlns="http://www.eprosima.com/XMLSchemas/fastRTPS_Profiles">
+  <transport_descriptors>
+    <transport_descriptor>
+      <transport_id>wsl_udp_only</transport_id>
+      <type>UDPv4</type>
+      <interfaceWhiteList>
+        <address>172.26.80.1</address>
+      </interfaceWhiteList>
+    </transport_descriptor>
+  </transport_descriptors>
+
+  <participant profile_name="windows_wsl_participant" is_default_profile="true">
+    <rtps>
+      <useBuiltinTransports>false</useBuiltinTransports>
+      <userTransports>
+        <transport_id>wsl_udp_only</transport_id>
+      </userTransports>
+    </rtps>
+  </participant>
+</profiles>

@@ -102,6 +102,7 @@ configure_project()
 
 ## 项目强制约束
 
+0. 使用任何 MATLAB MCP 工具前，必须先打开 `FC_SimulinkProject` 工程（`FC_SimulinkProject.prj`），确认工程初始化完成后再调用 MCP；不得在未打开工程时直接连接或读取模型。
 1. 所有子系统参数通过数据字典管理，不在模型块中硬编码数值。
 2. Bus 定义仅在 `1_Data_Dictionaries/BusConfig/` 中维护。
 3. 不将 `slprj/`、`derived/`、`build/`、`install/`、`log/` 纳入版本控制。

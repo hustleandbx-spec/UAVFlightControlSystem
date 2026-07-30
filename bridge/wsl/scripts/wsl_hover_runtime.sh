@@ -80,20 +80,34 @@ trap cleanup EXIT INT TERM
 # 启动顺序：Bridge(接收UDP→发布/aircraft/*) → Adapter(订阅/aircraft/*→发布/uav/*)
 # 两者在同一个 bash session，共享 CycloneDDS participant，topic 发现无问题。
 
-echo "Starting bridge..."
-ros2 run aircraft_udp_bridge aircraft_udp_bridge "${BRIDGE_ARGS[@]}" >>"${BRIDGE_LOG}" 2>&1 &
-BRIDGE_PID=$!
+existing_nodes="$(timeout 5 ros2 node list 2>/dev/null || true)"
+if printf '%s\n' "${existing_nodes}" | grep -q '/aircraft_udp_bridge'; then
+    echo "Bridge already discovered; attaching to existing node"
+    BRIDGE_PID=""
+else
+    echo "Starting bridge..."
+    ros2 run aircraft_udp_bridge aircraft_udp_bridge "${BRIDGE_ARGS[@]}" >>"${BRIDGE_LOG}" 2>&1 &
+    BRIDGE_PID=$!
+fi
 
-echo "Starting adapter..."
-ros2 run flightcore_runtime_adapter flightcore_runtime_adapter "${ADAPTER_ARGS[@]}" >>"${ADAPTER_LOG}" 2>&1 &
-ADAPTER_PID=$!
+if printf '%s\n' "${existing_nodes}" | grep -q '/flightcore_runtime_adapter'; then
+    echo "Adapter already discovered; attaching to existing node"
+    ADAPTER_PID=""
+else
+    echo "Starting adapter..."
+    ros2 run flightcore_runtime_adapter flightcore_runtime_adapter "${ADAPTER_ARGS[@]}" >>"${ADAPTER_LOG}" 2>&1 &
+    ADAPTER_PID=$!
+fi
 
 sleep 2
 
-echo "Starting PlotJuggler..."
+echo "Checking PlotJuggler..."
 PLOTJUGGLER_BIN="/opt/ros/jazzy/lib/plotjuggler/plotjuggler"
-PLOTJUGGLER_LAYOUT="${WS_DIR}/config/plotjuggler_flightcore_topics.xml"
-if [[ -x "${PLOTJUGGLER_BIN}" ]]; then
+PLOTJUGGLER_LAYOUT="${WS_DIR}/src/config/plotjuggler_flightcore_topics.xml"
+if pgrep -f '/plotjuggler/plotjuggler' >/dev/null 2>&1; then
+    echo "PlotJuggler already running; attaching to existing process"
+    PJ_PID=""
+elif [[ -x "${PLOTJUGGLER_BIN}" ]]; then
     if [[ -f "${PLOTJUGGLER_LAYOUT}" ]]; then
         "${PLOTJUGGLER_BIN}" -l "${PLOTJUGGLER_LAYOUT}" >>"${EPISODE_DIR}/plotjuggler.log" 2>&1 &
         PJ_PID=$!
@@ -135,14 +149,19 @@ cat >"${ROSBAG_QOS}" <<'YAML'
   depth: 10
 YAML
 
-echo "Starting rosbag record..."
-ros2 bag record \
-    /aircraft/state /aircraft/imu /aircraft/gps \
-    /uav/sensors/imu /uav/sensors/gps /uav/cmd/flight \
-    /uav/actuator/esc_cmd /uav/estimator/state /uav/health/status \
-    --qos-profile-overrides-path "${ROSBAG_QOS}" \
-    -o "${BAG_DIR}" >>"${ROSBAG_LOG}" 2>&1 &
-BAG_PID=$!
+if pgrep -f 'ros2 bag record' >/dev/null 2>&1; then
+    echo "Rosbag recorder already running; attaching to existing process"
+    BAG_PID=""
+else
+    echo "Starting rosbag record..."
+    ros2 bag record \
+        /aircraft/state /aircraft/imu /aircraft/gps \
+        /uav/sensors/imu /uav/sensors/gps /uav/cmd/flight \
+        /uav/actuator/esc_cmd /uav/estimator/state /uav/health/status \
+        --qos-profile-overrides-path "${ROSBAG_QOS}" \
+        -o "${BAG_DIR}" >>"${ROSBAG_LOG}" 2>&1 &
+    BAG_PID=$!
+fi
 
 echo "Starting EscCmd tracer..."
 ros2 topic echo --qos-reliability best_effort \
@@ -210,10 +229,11 @@ CLOCK_PID=$!
 # Periodic status reporter — writes a tiny JSON for the Windows PowerShell monitor
 (
     while true; do
-        bridge_alive=0; kill -0 "${BRIDGE_PID:-}" 2>/dev/null && bridge_alive=1
-        adapter_alive=0; kill -0 "${ADAPTER_PID:-}" 2>/dev/null && adapter_alive=1
-        bag_alive=0; kill -0 "${BAG_PID:-}" 2>/dev/null && bag_alive=1
-        pj_alive=0; kill -0 "${PJ_PID:-}" 2>/dev/null && pj_alive=1
+        nodes="$(timeout 5 ros2 node list 2>/dev/null || true)"
+        bridge_alive=0; printf '%s\n' "${nodes}" | grep -q '/aircraft_udp_bridge' && bridge_alive=1
+        adapter_alive=0; printf '%s\n' "${nodes}" | grep -q '/flightcore_runtime_adapter' && adapter_alive=1
+        bag_alive=0; pgrep -f 'ros2 bag record' >/dev/null 2>&1 && bag_alive=1
+        pj_alive=0; pgrep -f '/plotjuggler/plotjuggler' >/dev/null 2>&1 && pj_alive=1
         bag_size=$(du -sh "${BAG_DIR}" 2>/dev/null | cut -f1)
         printf '{"ts":%s,"bridge":%s,"adapter":%s,"rosbag":%s,"plotjuggler":%s,"bag_size":"%s"}\n' \
             "$(date +%s)" "$bridge_alive" "$adapter_alive" "$bag_alive" "$pj_alive" "$bag_size" \

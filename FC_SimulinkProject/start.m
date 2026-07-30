@@ -24,42 +24,12 @@ end
 globalDictDir = fullfile(rootDir, '1_Data_Dictionaries');
 addpath(globalDictDir);
 
-% Register generated ROS 2 custom message artifacts in the normal MATLAB home.
-% ros2RegisterMessages requires a shareable zip; this project keeps the
-% generated install tree directly under 3_Integration/ROS2/matlab_msg_gen.
-ros2MsgGenDir = fullfile(rootDir, '3_Integration', 'ROS2', ...
-    'matlab_msg_gen', computer('arch'));
-ros2InstallDir = fullfile(ros2MsgGenDir, 'install');
-ros2ShareDir = fullfile(ros2InstallDir, 'share');
-try
-    if isfolder(ros2ShareDir) && isfolder(fullfile(ros2InstallDir, 'm')) ...
-            && isfolder(fullfile(ros2InstallDir, 'bin')) ...
-            && exist('ros2', 'file') == 2
-        ros2MsgFiles = dir(fullfile(ros2ShareDir, '*', 'msg', '*.msg'));
-        ros2MsgNames = cell(1, numel(ros2MsgFiles));
-        for i = 1:numel(ros2MsgFiles)
-            [pkgDir, ~] = fileparts(ros2MsgFiles(i).folder);
-            [~, pkgName] = fileparts(pkgDir);
-            [~, msgName] = fileparts(ros2MsgFiles(i).name);
-            ros2MsgNames{i} = [pkgName '/' msgName];
-        end
-        if ~isempty(ros2MsgNames)
-            ros.internal.custommsgs.updatePreferences( ...
-                ros2MsgNames, {}, {}, {}, {}, 'ros2', ros2MsgGenDir);
-            rehash toolboxcache;
-        end
-    end
-catch ME
-    warning('ROS2 custom message registration failed: %s', ME.message);
-end
-clear ros2MsgGenDir ros2InstallDir ros2ShareDir ros2MsgFiles ros2MsgNames ...
-    pkgDir pkgName msgName i
-
 % 闭环顶层使用 Model Reference。即使用户直接打开 UAV_FC_loop.slx，
 % 不依赖 Simulink Project 元数据时，这些被引用模型也必须可解析。
 modelRefDirs = {
     fullfile(rootDir, '3_Integration')
     fullfile(rootDir, '3_Integration', 'FlightCore')
+    fullfile(rootDir, '3_Integration', 'Gazebo')
     fullfile(rootDir, '3_Integration', 'SimAdapter')
     fullfile(rootDir, '2_Model', 'command')
     fullfile(rootDir, '2_Model', 'control')
@@ -74,6 +44,14 @@ for i = 1:numel(modelRefDirs)
     if isfolder(modelRefDirs{i})
         addpath(modelRefDirs{i});
     end
+end
+
+% 自定义 ROS2 接口在仓库根部短路径 .r2g 中生成，避免 Windows 对象路径
+% 超限。这里只注册生成后的 MATLAB 接口；源定义仍位于 3_Integration/ROS2。
+generatedRos2Dir = fullfile(fileparts(rootDir), '.r2g', ...
+    'matlab_msg_gen', 'win64', 'install', 'm');
+if isfolder(generatedRos2Dir)
+    addpath(generatedRos2Dir);
 end
 
 % 确保缓存目录存在（首次启动或被清理后自动重建）

@@ -1,7 +1,7 @@
 function create_FlightControlDict()
 % 从 ParamSources/flight_control_params.yaml 生成 FlightControlDict.sldd
 % 字典生成位置：本脚本所在目录 (2_Model/control/)
-% 引用: GlobalTypes.sldd, VehicleDict.sldd
+% 引用: GlobalTypes.sldd, VehicleDict.sldd, PowerSystemDict.sldd
 
 scriptDir = fileparts(mfilename('fullpath'));
 dictName  = fullfile(scriptDir, 'FlightControlDict.sldd');
@@ -23,14 +23,17 @@ ddObj = Simulink.data.dictionary.create(dictName);
 % 引用全局字典
 globalDictDir = fullfile(scriptDir, '..', '..', '1_Data_Dictionaries');
 addpath(globalDictDir);
+powerSystemDir = fullfile(scriptDir, '..', 'power_system');
+addpath(powerSystemDir);
 ddObj.addDataSource('GlobalTypes.sldd');
 ddObj.addDataSource('VehicleDict.sldd');
+ddObj.addDataSource('PowerSystemDict.sldd');
 
 dData = getSection(ddObj, 'Design Data');
 addVarsFromCell(dData, VarTable);
 
 saveChanges(ddObj);
 close(ddObj);
-fprintf('字典 %s 创建完成（引用 GlobalTypes.sldd, VehicleDict.sldd），共 %d 个参数。\n', ...
+fprintf('字典 %s 创建完成（引用 GlobalTypes.sldd, VehicleDict.sldd, PowerSystemDict.sldd），共 %d 个参数。\n', ...
     dictName, size(VarTable, 1));
 end

@@ -20,6 +20,18 @@ _meta:
 # 位置控制环（外环）— Position PID
 # =============================================================================
 
+TC_POSITION_CONTROL_TS:
+  type: double
+  default: 0.02
+  min: 0.02
+  max: 0.02
+  unit: "s"
+  group: control_timing
+  storage_class: ExportedGlobal
+  description: "V0位置控制环显式离散周期，50 Hz。"
+  tunable_in_flight: false
+  safety_level: critical
+
 posP_xy:
   rename_to: MC_POS_XY_P
   type: single
@@ -33,6 +45,18 @@ posP_xy:
   tunable_in_flight: true
   increment: 0.1
   safety_level: routine
+
+posFilterN:
+  type: single
+  default: 20.0
+  min: 1.0
+  max: 25.0
+  unit: "rad/s"
+  group: position_control
+  storage_class: ExportedGlobal
+  description: "位置PID导数滤波系数；在50 Hz周期下满足N*Ts不超过0.5。"
+  tunable_in_flight: false
+  safety_level: critical
 
 posI_xy:
   rename_to: MC_POS_XY_I
@@ -136,6 +160,31 @@ maxVel_z:
 # 速度控制环（中环）— Velocity PID
 # =============================================================================
 
+TC_VELOCITY_CONTROL_TS:
+  type: double
+  default: 0.02
+  min: 0.02
+  max: 0.02
+  unit: "s"
+  group: control_timing
+  storage_class: ExportedGlobal
+  description: "V0速度控制环显式离散周期，50 Hz。"
+  tunable_in_flight: false
+  safety_level: critical
+
+velFilterN:
+  type: single
+  default: 20.0
+  min: 1.0
+  max: 25.0
+  unit: "rad/s"
+  group: velocity_control
+  storage_class: ExportedGlobal
+  description: "速度PID导数滤波系数；在50 Hz周期下满足N*Ts不超过0.5。"
+  tunable_in_flight: false
+  safety_level: critical
+
+
 velP_xy:
   rename_to: MC_VEL_XY_P
   type: single
@@ -181,7 +230,7 @@ velD_xy:
 velP_z:
   rename_to: MC_VEL_Z_P
   type: single
-  default: 0.2
+  default: 1.0
   min: 0.0
   max: 5.0
   unit: "(m/s²)/(m/s)"
@@ -265,6 +314,18 @@ maxTiltAngle:
 # 姿态控制环（内环）— Attitude P only
 # =============================================================================
 
+TC_ATTITUDE_CONTROL_TS:
+  type: double
+  default: 0.004
+  min: 0.004
+  max: 0.004
+  unit: "s"
+  group: control_timing
+  storage_class: ExportedGlobal
+  description: "V0姿态控制环显式离散周期，250 Hz。"
+  tunable_in_flight: false
+  safety_level: critical
+
 attP:
   rename_to: MC_ATT_P
   type: single
@@ -295,6 +356,31 @@ maxRate:
 # =============================================================================
 # 角速率控制环（最内环）— Rate PID
 # =============================================================================
+
+TC_RATE_CONTROL_TS:
+  type: double
+  default: 0.001
+  min: 0.001
+  max: 0.001
+  unit: "s"
+  group: rate_control
+  storage_class: ExportedGlobal
+  description: "角速率控制器显式离散采样周期。。"
+  tunable_in_flight: false
+  safety_level: critical
+
+rateFilterN:
+  rename_to: MC_RATE_FILTER_N
+  type: single
+  default: 100.0
+  min: 1.0
+  max: 500.0
+  unit: "rad/s"
+  group: rate_control
+  storage_class: ExportedGlobal
+  description: "角速率PID导数滤波器系数。"
+  tunable_in_flight: false
+  safety_level: critical
 
 rateP:
   rename_to: MC_RATE_P
