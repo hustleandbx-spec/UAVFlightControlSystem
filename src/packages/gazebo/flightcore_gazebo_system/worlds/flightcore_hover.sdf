@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+<sdf version="1.9">
+  <world name="flightcore_world">
+    <gravity>0 0 -9.80665</gravity>
+    <physics name="flightcore_lockstep_physics" type="dart">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>0</real_time_factor>
+    </physics>
+
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry><plane><normal>0 0 1</normal><size>100 100</size></plane></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><plane><normal>0 0 1</normal><size>100 100</size></plane></geometry>
+          <material><ambient>0.65 0.65 0.65 1</ambient><diffuse>0.65 0.65 0.65 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="flightcore_quad">
+      <!-- Gazebo 采用 ENU/FLU；初始偏航 90° 后映射到 FlightCore NED/FRD 的零姿态。 -->
+      <pose>0 0 0.09 0 0 1.5707963267948966</pose>
+      <link name="base_link">
+        <inertial>
+          <mass>1.0</mass>
+          <inertia>
+            <ixx>0.006721</ixx><iyy>0.008041</iyy><izz>0.014279</izz>
+            <ixy>0</ixy><ixz>0</ixz><iyz>0</iyz>
+          </inertia>
+        </inertial>
+        <collision name="body_collision">
+          <geometry><box><size>0.32 0.32 0.10</size></box></geometry>
+          <surface><friction><ode><mu>0.8</mu><mu2>0.8</mu2></ode></friction></surface>
+        </collision>
+        <visual name="body_visual">
+          <geometry><box><size>0.32 0.32 0.10</size></box></geometry>
+          <material><ambient>0.08 0.22 0.75 1</ambient><diffuse>0.08 0.22 0.75 1</diffuse></material>
+        </visual>
+      </link>
+
+      <plugin filename="libflightcore_gazebo_system.so" name="flightcore_gazebo::FlightCoreGazeboSystem">
+        <base_link>base_link</base_link>
+        <world_name>flightcore_world</world_name>
+        <max_thrust_n>4.179446268</max_thrust_n>
+        <max_reaction_torque_nm>0.055562</max_reaction_torque_nm>
+        <motor_arm_length_m>0.2275</motor_arm_length_m>
+        <!-- 开发期轻量 plant 的各向同性线性气动阻尼，单位 N/(m/s)。 -->
+        <linear_drag_n_per_mps>1.2</linear_drag_n_per_mps>
+        <gps_rate_divider>200</gps_rate_divider>
+        <service_timeout_ms>5000</service_timeout_ms>
+      </plugin>
+    </model>
+  </world>
+</sdf>

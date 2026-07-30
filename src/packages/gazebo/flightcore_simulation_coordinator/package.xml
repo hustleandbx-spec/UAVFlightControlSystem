@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>flightcore_simulation_coordinator</name>
+  <version>0.1.0</version>
+  <description>FlightCore-Gazebo 全局 epoch 屏障与唯一 WorldControl 权限所有者。</description>
+  <maintainer email="hustle2023@users.noreply.github.com">hustle</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>rclcpp</depend>
+  <!-- Coordinator 是生成节点唯一的仿真时钟授权者。 -->
+  <depend>rosgraph_msgs</depend>
+  <!-- 生成节点以 String step_notify 显式确认本次模型步已经完整结束。 -->
+  <depend>std_msgs</depend>
+  <!-- 手动启动门使用 Trigger，避免进程启动即推进 epoch。 -->
+  <depend>std_srvs</depend>
+  <depend>flightcore_gazebo_msgs</depend>
+  <depend>gz-msgs10</depend>
+  <depend>gz-transport13</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
