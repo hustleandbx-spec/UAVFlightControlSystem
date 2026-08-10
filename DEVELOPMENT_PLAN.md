@@ -213,5 +213,5 @@ criteria:
 1. 已完成 P4 第一个可回放 episode。
 2. 该项能直接提升可运行、可复现、可记录、可比较、可扩展中的至少一项。
 3. 有明确验收判据。
-4. 对 FlightCore 边界的影响已在 `docs/contracts/` 中写清。
+4. 对 FlightCore 边界的影响已在 `docs/archive/contracts/` 中写清。
 5. 变更前已补测试或 smoke 验证脚本。

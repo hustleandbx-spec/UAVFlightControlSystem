@@ -96,7 +96,7 @@ configure_project()
 | 项目入口和文档体系 | `README.md` |
 | 当前开发计划 | `DEVELOPMENT_PLAN.md` |
 | 路线图与消息思想 | `docs/vision/` |
-| InterfaceContract 与 Runtime Isolation | `docs/contracts/` |
+| InterfaceContract 与 Runtime Isolation（历史） | `docs/archive/contracts/` |
 | ROS2 topic 与 Simulink Bus 映射 | `FC_SimulinkProject/3_Integration/ROS2/` |
 | Windows AirSim endpoint | `bridge/airsim_ros2_udp_bridge/` |
 
@@ -113,14 +113,3 @@ configure_project()
 8. 契约变更必须先在 `4_Test/` 加测试，再改模型、adapter、bridge 或部署代码。
 9. Windows 侧文件在 Windows 仓库维护；WSL ROS2 源码在 WSL 原生 filesystem 维护。
 
-## 当前冻结项
-
-外部 AirSim episode 通过前，不启动：
-
-- 新增 `/uav/*` topic
-- EscCmd/SystemHealth 改名
-- Gazebo/Isaac/Pegasus adapter
-- MAVLink Gateway
-- barometer/magnetometer/rangefinder/lidar 运行时落地
-- RL/视觉/world-model 接口实现
-- C++ FlightBus 中间件

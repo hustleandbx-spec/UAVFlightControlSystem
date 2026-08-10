@@ -1,59 +1,69 @@
-# 文档体系索引
+# FlightCore 文档体系索引
 
-> 本目录按 2026-07-07 架构审计后的治理规则组织：思想、契约、组件手册、状态分离。仓库内不维护会话流水和完成百分比。
+> 按 **2026-08-10 SE 体系重构**：`docs/` 组织为「宪法层 + 产品链 + 过程链」。SE 体系入口 = `00_SE_Management_Plan.md`。
 
-## 分层
+## SE 体系总览
 
-| 层级 | 目录/文件 | 更新频率 | 内容边界 |
-|---|---|---:|---|
-| Tier 0 思想层 | `docs/vision/` | 低 | 为什么做、长期路线、消息架构哲学 |
-| Tier 1 契约层 | `docs/contracts/` | 中 | FlightCore 接口、runtime isolation、DDS 例外、边界不变量 |
-| 执行计划 | `../DEVELOPMENT_PLAN.md` | 中 | 当前阶段行动序列、验收判据、冻结/解冻规则 |
-| Tier 2 组件手册 | 组件目录内 `README.md` / `protocol.md` | 中 | 具体组件如何运行、构建、同步 |
-| Tier 3 状态层 | PBOS `runtime/handoffs/UAVSingle.md` | 高 | 会话交接、完成状态、遗留事项 |
-| Archive | `docs/archive/` | 只读 | 审计报告、过期计划、legacy 脚本 |
+| 链 | 位置 | 回答 | 说明 |
+|---|---|---|---|
+| 宪法层 | `00_SE_Management_Plan.md` | 体系怎么组织 | 文档树 / 标准映射 / 术语编号 / 配置管理 / 门禁声明 |
+| 产品与技术链 | `product/` | 做什么、做成什么样、怎么验证 | 01..15（需求 / 设计 / 接口 / V&V） |
+| 过程管理链 | `process/` | 怎么定、怎么管、出过什么问题、门过了没有 | 00..04（决策 / 风险 / 变更 / 问题 / 评审） |
+| 合规/适航轨 | 显式后置 | 法规合规 | TBD-002（后置，非 SE 文档） |
+
+## 产品与技术链（product/）
+
+| 槽位 | 文件 | 内容 |
+|---|---|---|
+| 01 | `product/FlightCore_Project_Vision_v0.1_Draft.md` | 项目愿景 |
+| 02 | `product/02_Stakeholders_and_Needs.md` | 利益相关方与需要（占位待回填） |
+| 03 | `product/03_ConOps.md` | 运行概念 |
+| 04 | `product/04_Reference_Missions.md` | 参考架次 |
+| 05 | `product/05_ODD_and_Environment.md` | 运行设计域与环境 |
+| 06 | `product/06_MOE_MOP_TPM.md` | 效能 / 性能 / 技术性能度量 |
+| 07 | `product/07_System_Requirements.md` | 系统需求（SYS-REQ） |
+| 08 | `product/08_System_Functional_Architecture.md` | 功能架构 |
+| 09 | `product/09_System_Logical_Architecture.md` | 逻辑架构 |
+| 10 | `product/10_Interface_Definition.md` | 接口定义（A1 任务计划接口 + A2 契约 #1..7） |
+| 11 | `product/11_Vehicle_Definition.md` | 车辆定义（Assumption 层） |
+| 12 | `product/12_Parameter_and_Configuration_Management.md` | 参数与配置（占位） |
+| 13 | `product/13_V&V_Plan.md` | 验证与确认计划 |
+| 14 | `product/14_SUBSYS_REQ.md` | 子系统需求 |
+| 15 | `product/15_Assumptions_Constraints_TBD.md` | 假设 / 约束 / TBD |
+
+## 过程管理链（process/）
+
+| 文件 | 角色 |
+|---|---|
+| `process/00_Process_Management.md` | 过程管理说明（边界 / 生命周期 / 变更四问） |
+| `process/01_Session_and_Decision_Log.md` | 会话·决策日志（修订时间链 + DEC 表 + 产品原料历史溯源） |
+| `process/02_Risk_Register.md` | 风险登记册（R-xx） |
+| `process/03_Issue_Register.md` | 问题 / 缺陷登记（I-xx） |
+| `process/04_Gate_Records.md` | 评审门禁过签记录（G-xx） |
 
 ## 权威文件
 
 | 问题 | 读这里 |
 |---|---|
+| SE 体系怎么组织 / 从哪进 | `00_SE_Management_Plan.md` |
+| 决策记录 / 时间链 / DEC | `process/01_Session_and_Decision_Log.md` |
 | 当前项目主线是什么 | `../README.md` |
 | 下一步怎么做、怎么验收 | `../DEVELOPMENT_PLAN.md` |
-| 长期路线和克制原则是什么 | `vision/UAV_World_Model_Capability_Roadmap.md` |
-| 为什么内部事实层不能被 ROS2/MAVLink 定义 | `vision/自建飞控消息系统设计思想.md` |
-| FlightCore Bus 边界是什么 | `contracts/interface_contract.md` |
-| RuntimeAdapter 和 DDS 跨界例外怎么定义 | `contracts/flightcore_runtime_isolation.md` |
-| Gazebo 联合仿真怎么跑 | `../README.md` 与 WSL `src/packages/gazebo/README.md` |
-| 冻结的 AirSim 历史路线 | Git 历史与 `docs/archive/` |
-| ROS2 topic 与 Simulink Bus 怎么映射 | `contracts/interface_contract.md` |
-| ESKF 研究模型为什么不在当前主线 | `../FC_SimulinkProject/2_Model/state_estimation/ESKF/KNOWN_ISSUES.md` |
-| Claude/Codex 怎么启动 MATLAB/MCP | `../CLAUDE.md` / `../AGENTS.md` |
 | 最近做到了哪里 | PBOS `runtime/handoffs/UAVSingle.md` |
+| 怎么启动 MATLAB/MCP | `../CLAUDE.md` / `../AGENTS.md` |
+
+## 辅助目录（历史 / 探索，非 SE 文档树）
+
+| 目录 | 内容 |
+|---|---|
+| `vision/` | 长期路线与消息思想（CLAUDE.md 架构指针引用） |
+| `archive/` | 只读归档：审计报告、过期计划、legacy 脚本 + 早期 `contracts/` `design/` `specs/` `reports/` `architecture_discussions/` |
 
 ## 文档写入规则
 
-1. 新增长期思想或路线判断，放入 `docs/vision/`。
-2. 新增接口、不变量、跨系统边界，放入 `docs/contracts/`。
-3. 新增具体组件用法，放入组件目录的 README 或 protocol 文件。
-4. 新增短期行动序列和验收判据，更新 `DEVELOPMENT_PLAN.md`。
-5. 新增会话状态、进度、遗留项，写入 PBOS handoff，不写入仓库。
-6. 过期但有历史价值的计划放入 `docs/archive/`，并在文件头声明已归档。
-
-## 当前冻结面
-
-2026-07-30 起 Gazebo standalone ROS 2 codegen 联合仿真是唯一主线。下列内容
-不得通过文档暗示为当前执行路径：
-
-- AirSim endpoint、UDP bridge、runtime adapter 与跨 Windows–WSL DDS 路线
-- `FlightCore_ROS2_loop` 的 AirSim 开发脚手架扩展
-- Isaac、Pegasus runtime adapter
-- MAVLink Gateway
-- 新增 `/uav/*` topic
-- EscCmd/SystemHealth 改名
-- `/aircraft/*` naming 迁移
-- barometer、magnetometer、rangefinder、lidar 运行时落地
-- RL、视觉、world model 接口实现
-- C++ FlightBus 中间件
-
-这些内容可以作为 vision 或 archive 中的历史/未来方向存在，但不能出现在
-README 的当前执行路径中。解冻必须有新的明确裁决、独立验收目标和测试计划。
+1. SE 体系内容按链写入：产品内容 → `product/`，过程内容 → `process/`。
+2. 文档树 / 编号 / 术语变化先在此登记：`00_SE_Management_Plan.md` §3/§4（**先登记后使用**）。
+3. 新决策 → 会话·决策日志（DEC 顺延 + 时间链块）。
+4. 新风险 → `process/02`；新问题 → `process/03`；门禁过签 → `process/04`。
+5. 过期但有历史价值 → `archive/`，文件头声明已归档。
+6. 会话状态 / 进度 / 遗留项 → PBOS handoff，不写入仓库。
