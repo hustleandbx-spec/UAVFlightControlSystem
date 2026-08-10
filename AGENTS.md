@@ -39,4 +39,4 @@ validate_installation
 
 ## 架构约束（与 CLAUDE.md 共享）
 
-架构指针见 `docs/contracts/`；路线图见 `docs/vision/`。项目强制约束见 CLAUDE.md "项目强制约束" 节，此处不重复。
+架构指针见 `docs/archive/contracts/`；路线图见 `docs/vision/`。项目强制约束见 CLAUDE.md "项目强制约束" 节，此处不重复。
