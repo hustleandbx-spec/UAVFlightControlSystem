@@ -56,3 +56,35 @@ CMD_SAMPLE_TIME:
   group: scheduler
   storage_class: ExportedGlobal
   description: "命令模块显式离散采样时间，与控制器快速路径一致。"
+
+CMD_MISSION_CRUISE_SPEED:
+  type: single
+  default: 2.0
+  unit: "m/s"
+  group: mission_navigation
+  storage_class: ExportedGlobal
+  description: "QGC航线未显式变速时使用的默认航段巡航速度。"
+
+CMD_MISSION_MAX_ACCELERATION:
+  type: single
+  default: 1.0
+  unit: "m/s^2"
+  group: mission_navigation
+  storage_class: ExportedGlobal
+  description: "任务航段允许的默认最大加速度。"
+
+CMD_MISSION_MAX_JERK:
+  type: single
+  default: 2.0
+  unit: "m/s^3"
+  group: mission_navigation
+  storage_class: ExportedGlobal
+  description: "任务航段允许的默认最大jerk。"
+
+CMD_STOP_VELOCITY_TOLERANCE:
+  type: single
+  default: 0.2
+  unit: "m/s"
+  group: mission_navigation
+  storage_class: ExportedGlobal
+  description: "STOP航点判定停稳时允许的三维速度误差。"

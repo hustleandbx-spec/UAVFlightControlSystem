@@ -1,6 +1,6 @@
 function build_GPS_sensor()
 % build_GPS_sensor  程序化构建 sensor_GPS_model.slx
-% 输入: DynamicModelBus, 输出: GPS_BUS (Lat, Lon, Alt, Velocity, Valid, Timestamp)
+% 输入: DynamicModelBus, 输出: GPSBus (Lat, Lon, Alt, Velocity, Valid, Timestamp)
 % 噪声参数来自 SensorDict.sldd
 % 架构: NED->LLA -> RateTransition(1kHz->5Hz) -> DT(single) -> 噪声注入 -> BusCreator
 %
@@ -37,7 +37,7 @@ add_block('simulink/Ports & Subsystems/In1', [modelName '/In']);
 set_param([modelName '/In'], 'OutDataTypeStr', 'Bus: DynamicModelBus');
 
 add_block('simulink/Ports & Subsystems/Out1', [modelName '/Out']);
-set_param([modelName '/Out'], 'OutDataTypeStr', 'Bus: GPS_BUS');
+set_param([modelName '/Out'], 'OutDataTypeStr', 'Bus: GPSBus');
 
 % ============================================================
 % Bus Selector
@@ -138,7 +138,7 @@ set_param([modelName '/Timestamp'], 'DisplayTime', 'off');
 add_block('simulink/Signal Routing/Bus Creator', [modelName '/BusCreator']);
 set_param([modelName '/BusCreator'], ...
     'Inputs', 'Lat,Lon,Alt,Velocity,Valid,Timestamp', ...
-    'OutDataTypeStr', 'Bus: GPS_BUS', ...
+    'OutDataTypeStr', 'Bus: GPSBus', ...
     'NonVirtualBus', 'on', ...
     'InheritFromInputs', 'off');
 

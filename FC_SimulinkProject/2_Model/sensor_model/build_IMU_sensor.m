@@ -1,6 +1,6 @@
 function build_IMU_sensor()
 % build_IMU_sensor  程序化构建 sensor_IMU_model.slx
-% 输入: DynamicModelBus, 输出: IMU_BUS (Accel, Gyro, Valid, Timestamp)
+% 输入: DynamicModelBus, 输出: IMUBus (Accel, Gyro, Valid, Timestamp)
 % 噪声参数来自 SensorDict.sldd
 
 scriptDir = fileparts(mfilename('fullpath'));
@@ -40,7 +40,7 @@ add_block('simulink/Ports & Subsystems/Inport', [modelName '/in']);
 set_param([modelName '/in'], 'PortDimensions', '1', 'OutDataTypeStr', 'Bus: DynamicModelBus');
 
 add_block('simulink/Ports & Subsystems/Outport', [modelName '/out']);
-set_param([modelName '/out'], 'PortDimensions', '1', 'OutDataTypeStr', 'Bus: IMU_BUS');
+set_param([modelName '/out'], 'PortDimensions', '1', 'OutDataTypeStr', 'Bus: IMUBus');
 
 % ============================================================
 % Bus Selector: 从 DynamicModelBus 提取信号
@@ -168,12 +168,12 @@ set_param([modelName '/Timestamp'], ...
     'Position', [640 175 690 205]);
 
 % ============================================================
-% Bus Creator: 组装 IMU_BUS
+% Bus Creator: 组装 IMUBus
 % ============================================================
 add_block('simulink/Signal Routing/Bus Creator', [modelName '/BusCreator']);
 set_param([modelName '/BusCreator'], ...
     'Inputs', 'Accel,Gyro,Valid,Timestamp', ...
-    'OutDataTypeStr', 'Bus: IMU_BUS', ...
+    'OutDataTypeStr', 'Bus: IMUBus', ...
     'NonVirtualBus', 'on', ...
     'Position', [740 40 790 155]);
 
