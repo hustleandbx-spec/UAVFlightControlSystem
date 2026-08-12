@@ -120,6 +120,20 @@ Vehicle Definition                  ✅ 第一版（Assumption 层，7.5 节；C
 >
 > **本次修订（2026-08-10，续16）：** **DEC-115 SE 文档体系收敛 + 13 V&V 起草完成**——① 16_ADR 载体 = 本文件 DEC 日志承担（文档树显式声明）；② SUBSYS-REQ 独立成文 `14_SUBSYS_REQ.md`（行内两向链 + SYS↔SUBSYS 映射表），`14_Requirements_Traceability.md` 占位删除；追溯纪律 = 双向过程/产物矩阵（ARP4754B §5.4.6.1 / 29148 §6.5.2.3）、端到端矩阵（VCRM）并入 13；③ 00 收敛（评审门禁→§12 指针、待决策节删除、配置管理→本文件 §10）；④ 13 V&V 重写：VER-001..022 矩阵逐条 + ARP4754B §5.5.5 四验证方法 + DO-331 MB.6 锚定 + 29148 VCRM 对齐 + Validation 半边；**订正**：ARP4754B 附录 A = PROCESS OBJECTIVES DATA、非 DVP&R（Prompt §4 措辞修正）。下一步：SYS-REQ-010/011 定稿。
 
+> **本次修订（2026-08-12）：** **DEC-122 定案 + 13 §2.3 验证环境节落地**——plant fidelity 触发机制 = **需要性驱动**（DEC-117 TBD 挂账闭合）：触发源 = ① VER 判据信号可信性（VER-021 触地判据"旋翼卸载/推力低门限"需动力系统非单调静态卸载特征）② 数值回填需要（DEC-056 控制分析：段间跟随误差/能源裕度需执行机构延迟与动态特性）；增强到最小充分度、记 13 §2.3 fidelity 变化表；R-02 由 VER-010 雏形早期跑验证 plant 能力（非 fidelity 增强）。13 §2.3 落地 DEC-117..120 环境四件套（plant 基线 / GCS 工具链+FTP 风险验证 / 场景编排+注入位清单 / 数据记录）。下一步：13 §6 触地信号映射 / §7 Validation 半边 / 00 §2 标准映射定稿。
+
+> **本次修订（2026-08-12，续2）：** **DEC-123 定案 + 13 §6/§7 成稿 + 00 §2 标准映射定稿**——① 13 §6 触地判据可观测信号映射成表（DEC-041/100 挂账闭合；判据② fidelity 依赖挂 DEC-122）；② 13 §7 Validation 半边具体化（间接确认推理链：前提 P → 链①执行前提闭合 → 链②按计划分量闭合 + 测量/闭合边界 + 三条边界声明）；③ **DEC-123**：00 §2 标准映射定稿 = 正向/反向表 + DO-331 目标级适用性（MB.6.3/.4/.7/.8）+ **DAL/工具鉴定预留框架**（结论 TBD-002 回填，不写死不适用——适航属合规轨、过早写死锁死未来路径）。下一步：02 SN 回填、风险册刷新、V&V 收尾评审。
+
+> **本次修订（2026-08-12，续3）：** **02 SN 回填 + 风险册刷新 + V&V 补全收口**——① 02_Stakeholders_and_Needs 回填（干系人表 + SN-001..011 + Need→MOE 映射，SE 链"该有而没有"层闭合；00 §3.1 状态更新）；② process/02 刷新（R-02/03/05 缓解措施落地引用 13 §2.3/§6；新增 **R-07**：动力系统卸载信号能力风险，触发条件 = VER-021 判据② fidelity 依赖）；③ **13 V&V 补全三项全部落地**（验证环境节 / Validation 半边 / 标准映射定稿），SE 链待讨论决策清零。下一步：V&V 收尾评审（门禁确认），确认后刷新 15 TBD/假设状态与续接提示词。
+
+> **本次修订（2026-08-12，续4）：** **数据字典/契约落地执行**——① BusConfig 21 条 Bus 与 A2 契约对齐（重写 7：NavigationContract v2/CommanderRequest/CommanderStatus/MissionControlRequest/MissionPlanAvailable/MissionStatus/MissionPlan A1 400；新建 CommandAckBus/StateSnapshot；重构 NavigationStatus 制导状态流；废弃删 FlightCmdBus/NavigationObjectiveBus；GPS/IMU 文件改名 config_GPS_BUS/config_IMU_BUS；4 复用文件注释转中）；② 4_Test/bus_contracts 规范化 = 单一契约表 `bus_contracts.m` + 批测 `test_bus_contracts.m`（数据驱动，替代 per-bus）；③ MATLAB 验证：**L1 批测 21/21 PASS、L2 `create_GlobalTypes()` 重建 GlobalTypes.sldd（21 总线）**；④ **L3 模型字段对齐未完成**：Navigator/Commander/CommandGenerator 引用已删/改名字段（编译即失败）、MissionManager 待重构时核 → **模型重构 = 下一步主线程**。Prompt_Continue 已刷新（2026-08-12）。
+
+> **本次修订（2026-08-12，续5）：** **SE 链接口层收口（BusConfig 之后，不跳 L3）**——① BusConfig 注释统一中文（GPS_BUS/IMU_BUS/RouteWindowBus 补齐，22 文件全中）；② **10 §4 与 21 总线同步**：补 5 个缺失总线字段定义（MissionPlanAvailableBus / MissionControlRequestBus / MissionStatusBus / NavigationStatusBus / GcsLinkStatusBus）、契约 #5 扁平化编码映射（A1 嵌套 → 定长 400）、契约 #6 完整字段（CommandAckBus Valid、CommanderStatusBus 安全占位 LastCommandId/Safety*）、RouteWindowBus（MM 内部）字段、§5 模块状态流字段；③ **接口层门禁 G-004 过签**（process/04，依据 = 01 §12 接口层 + L1 批测 21/21 + L2 字典重建；遗留 = L3 模型字段对齐）；④ 00 §3.1（13 行已完成 / 10 行同步标注）与 15 TBD-013（DEC-068 已解决）卫生刷新。**SE 链接口层在文档侧闭合。下一步（顺序，约束 8 先测试）= 行为测试对齐新契约 → L3 模型重构 → 数值回填 MBD。**
+
+> **本次修订（2026-08-12，续6）：** **GPS/IMU 总线命名统一为驼峰（GPSBus / IMUBus）**——① BusConfig 文件 `config_GPS_BUS.m`/`config_IMU_BUS.m` 改名为 `config_GPSBus.m`/`config_IMUBus.m`，busName 改 `GPSBus`/`IMUBus`（与其余总线「文件名=函数名=busName」约定统一，消除函数名/文件名不匹配）；② `bus_contracts.m`（L1）与 `check_model_bus_usage.m`（L3）同步；③ 直接耦合代码/文档同步：sensor_model 构建脚本（`Bus: GPSBus/IMUBus`）、ROS2 `flightcore_msgs/Imu|Gps.msg` 注释、10 §3/§4、本文件 §13 表/契约 #7、Gazebo README；④ 待办：`GlobalTypes.sldd` 重建（MATLAB `create_GlobalTypes()`）生成 GPSBus/IMUBus 条目；.slx 模型引用与 4_Test 集成契约测试对齐归 L3/行为测试步骤。历史记录（续4「文件改名 config_GPS_BUS」）保持原样不改写。
+
+> **本次修订（2026-08-12，续7）：** **开发计划与控制分析载体槽位 + 文档树卫生（DEC-124）**——① 新增 `process/05_Development_Plan.md`（ISO 15288 项目规划，第一阶段实施唯一执行入口；自包含内联范围 / 模块职责 / 21 Bus 契约字段 / 里程碑 M0..M4 / 数值回填注册表 / 风险 / DoD）；旧根 `DEVELOPMENT_PLAN.md`（AirSim 主线）退役删除（git 历史保留；CLAUDE.md / 00 / docs README 引用改指 process/05）；② 产品链 16 槽位复用为 `product/16_Design_and_Control_Analysis.md`（DEC-056 数值推导 + 算法设计意图载体，供 VER-022 评审与数值回填；ADR 已并入 process/01，DEC-115 槽位复用）；③ 卫生：00 §4.1 DEC 范围 → ..123、SN"已回填"、process/02 补 R-07、process/04 状态改"已记"、docs README 02 行与指针、15 §3 与 07 SYS-REQ-016 交叉引用（§5.6→§2）同步。影响：00 §3/§4、process/05、product/16、docs README、CLAUDE.md。下一步：M1 行为测试对齐新契约（约束 8 先测试）。
+
 ---
 
 ## 2. 决策日志（DEC）
@@ -247,6 +261,9 @@ Vehicle Definition                  ✅ 第一版（Assumption 层，7.5 节；C
 | DEC-119 | **④ 场景编排定案 = 混合（2026-08-10）**：验证用例组织 = 自动化跑批用脚本（MAVProxy 脚本 + 场景配置，对应"快速全流程仿真"定位）+ 人工/单条调试用 Simulink Test（4_Test 框架），两者共享同一套**注入位定义**（传感器故障注入 / plant 条件注入 / 总线信号覆盖）。注入位能力清单随 V&V(13) 环境节落地。 |
 | DEC-120 | **⑤ 数据记录定案 = 混合（2026-08-10）**：每次 VER 运行自动落原始数据（执行日志 + 轨迹 + MOE 判定表 + 模型/字典/场景版本 + 测试配置含 seed），MOE 自动初判；关键项（VER-010 全流程、触地判定等）人工复核后入 VCRM。可复现 = 版本/场景/seed 逐次标记。 |
 | DEC-121 | **SYS-REQ-011"越界"边界定案（2026-08-10，011 定稿）**："越界" = 违反安全约束硬限（包线/禁飞区/能源等，DEC-028）+ 当前状态不允许（未解锁/阶段非法，Commander 命令审查）；安全硬限优先于命令审查（DEC-004/059 分层）；降落段接管物理限制属设计层（DEC-023）。**SYS-REQ-010/011 随之定稿**（SE 链门禁第⑤项闭合），07/§12 同步。 |
+| DEC-122 | **plant fidelity 触发机制 = 需要性驱动（2026-08-12，DEC-117 TBD 挂账闭合）**：单一 6-DOF 环境下（DEC-117）fidelity 逐步增强的触发 = 需要性驱动——① 某 VER 通过判据需 plant 提供当前模型不具备的可信信号（VER-021 触地判据"旋翼卸载/推力低门限" DEC-100 判据② → 动力系统需非单调静态的卸载特征）；② 数值回填需（DEC-056 控制分析：段间跟随误差/能源裕度需执行机构 10~30ms 延迟与动态特性）。触发时增强到**最小充分度**、记 13 §2.3 fidelity 变化表（时间/增强项/驱动源/影响 VER·数值，可追溯）；R-02 缓解 = VER-010 雏形早期跑验证基线 plant 能力（属基线能力验证、非 fidelity 增强、不改变单一环境 DEC-117）。影响：13 §2.3、VER-021/010、R-02、DEC-117。 |
+| DEC-123 | **00 §2 标准映射定稿 = 正向/反向表 + DO-331 目标级适用性 + DAL/工具鉴定预留框架（2026-08-12）**：00 §2 定稿——① 正向/反向映射表（文档层↔标准章节，含落地文档列）；② DO-331 目标级适用性 = MB.6.3/.4/.7/.8 逐条（MIL/SIL，作开发过程保证、不受 DAL 决策影响）；③ **DAL 与工具鉴定 = 预留框架挂账**：第一阶段无实机、无审定目标（DEC-033/114）、适航轨 TBD-002 后置 → DAL 分配与工具鉴定（DO-330）属合规行为，00 §2 只建适用性框架 + 理由链，结论标"TBD-002 时回填"（当前倾向：工具不触发鉴定——验证输出人工复核 DEC-120、判据独立于工具）。影响：00 §2、13 §8；随 13 定稿，SE 链待讨论决策清零。 |
+| DEC-124 | **开发计划与控制分析载体槽位建立（2026-08-12）**：① 过程链新增 `process/05_Development_Plan.md` = 第一阶段开发计划（ISO 15288 项目规划，实施唯一执行入口，自包含内联范围 / 模块职责 / 21 Bus 契约字段 / 里程碑 M0..M4 / 数值回填注册表 / 风险 / DoD）；旧根 `DEVELOPMENT_PLAN.md`（AirSim 主线）退役删除（git 历史保留，CLAUDE.md / 00 / docs README 引用改指 process/05）；② 产品链 16 槽位复用为 `product/16_Design_and_Control_Analysis.md` = 设计说明与控制分析（DEC-056 数值推导 + 算法设计意图载体，供 VER-022 评审与数值回填；ADR 已并入 process/01，DEC-115）；③ 文档树 / 索引卫生：00 §4.1 DEC 范围 → ..123、SN 行"已回填"、process/02 补 R-07、process/04 状态改"已记"、docs README 02 行与"下一步怎么做"指针、15 §3 与 07 SYS-REQ-016 交叉引用（§5.6→§2）同步。影响：00 §3/§4、process/05、product/16、docs README、CLAUDE.md。下一步：M1 行为测试对齐新契约（约束 8 先测试）→ M2 L3 模型重构 → M3 数值回填 → M4 VER。 |
 
 ---
 
@@ -645,7 +662,7 @@ Waypoint {
 | GcsLinkStatusBus | 链路状态 | ✅ 复用 | 订阅发布（遥测） |
 | MissionStatusBus | MM 任务状态 | ✅ 复用 | 订阅发布（状态回报） |
 | RouteWindowBus | **MM 内部**滑动窗口（Prev/Cur/Next，含 IsFirst/Last） | 保留内部（不跨模块） | — |
-| GPS_BUS / IMU_BUS | 传感器测量 | ✅ 复用 | GPS 中速 / IMU 高速直连 |
+| GPSBus / IMUBus | 传感器测量 | ✅ 复用 | GPS 中速 / IMU 高速直连 |
 | DynamicModelBus | 动力学真值 | ✅ 复用 | MIL plant 输出 |
 | EscCmdBus | FC→电机指令（DEC-064） | ✅ 复用 | 直连（执行链末端） |
 | ThrustTorqueBus | 动力→动力学 | ✅ 复用 | plant 路径 |
@@ -770,7 +787,7 @@ CommanderStatusBus — Commander 模块状态流（DEC-087）
 
 **决策（DEC-089/090）：** 逐条 Ack；**多事件时序**——同一 CommandId 可多次发布（approved→aborted），GCS 按 CommandId 聚合取最新、CommandId 单调递增，Ack 事件入 Logging 持久化（事后排查）；ReasonCode 集 = 起飞门 7 条逐条 + 阶段合法性 + 参数非法 + 安全否决（后置），粒度服务操作者 HMI（DEC-003），SUBSYS-REQ 展开；查询通道 request-response 独立于命令 Ack（DEC-066 通道②）。复用：MissionControlRequest / MissionPlanAvailable / CommanderStatus / MissionStatus / GcsLinkStatus；NavigationStatusBus 制导状态流（DEC-087）已定。
 
-**契约 #7..N（复用收口）：** GPS_BUS / IMU_BUS（传感器测量，GPS 中速 / IMU 高速直连）、DynamicModelBus（动力学真值，MIL plant）、EscCmdBus（FC→电机指令，直连执行链末端，DEC-064 混合器输出）、ThrustTorqueBus（动力→动力学，plant 路径）、ExperimentTraceBus / RuntimeTruthBus（日志/真值，订阅）——全部 ✅ 复用；**FlightCmdBus 废弃**（DEC-063，被 TrajectorySetpointBus 取代）。
+**契约 #7..N（复用收口）：** GPSBus / IMUBus（传感器测量，GPS 中速 / IMU 高速直连）、DynamicModelBus（动力学真值，MIL plant）、EscCmdBus（FC→电机指令，直连执行链末端，DEC-064 混合器输出）、ThrustTorqueBus（动力→动力学，plant 路径）、ExperimentTraceBus / RuntimeTruthBus（日志/真值，订阅）——全部 ✅ 复用；**FlightCmdBus 废弃**（DEC-063，被 TrajectorySetpointBus 取代）。
 
 ---
 
