@@ -16,7 +16,7 @@
 | 槽位 | 文件 | 内容 |
 |---|---|---|
 | 01 | `product/FlightCore_Project_Vision_v0.1_Draft.md` | 项目愿景 |
-| 02 | `product/02_Stakeholders_and_Needs.md` | 利益相关方与需要（占位待回填） |
+| 02 | `product/02_Stakeholders_and_Needs.md` | 利益相关方与需要（SN-001..011 已回填） |
 | 03 | `product/03_ConOps.md` | 运行概念 |
 | 04 | `product/04_Reference_Missions.md` | 参考架次 |
 | 05 | `product/05_ODD_and_Environment.md` | 运行设计域与环境 |
@@ -30,6 +30,7 @@
 | 13 | `product/13_V&V_Plan.md` | 验证与确认计划 |
 | 14 | `product/14_SUBSYS_REQ.md` | 子系统需求 |
 | 15 | `product/15_Assumptions_Constraints_TBD.md` | 假设 / 约束 / TBD |
+| 16 | `product/16_Design_and_Control_Analysis.md` | 设计说明与控制分析（数值回填 + 算法设计意图） |
 
 ## 过程管理链（process/）
 
@@ -40,6 +41,7 @@
 | `process/02_Risk_Register.md` | 风险登记册（R-xx） |
 | `process/03_Issue_Register.md` | 问题 / 缺陷登记（I-xx） |
 | `process/04_Gate_Records.md` | 评审门禁过签记录（G-xx） |
+| `process/05_Development_Plan.md` | 第一阶段开发计划（里程碑 / 验收门 / 实施入口） |
 
 ## 权威文件
 
@@ -48,7 +50,7 @@
 | SE 体系怎么组织 / 从哪进 | `00_SE_Management_Plan.md` |
 | 决策记录 / 时间链 / DEC | `process/01_Session_and_Decision_Log.md` |
 | 当前项目主线是什么 | `../README.md` |
-| 下一步怎么做、怎么验收 | `../DEVELOPMENT_PLAN.md` |
+| 下一步怎么做（开发执行） | `process/05_Development_Plan.md`（实施唯一入口）；SE 续接 = `Prompt_Continue.md`（旧 `../DEVELOPMENT_PLAN.md` 已于 2026-08-12 删除） |
 | 最近做到了哪里 | PBOS `runtime/handoffs/UAVSingle.md` |
 | 怎么启动 MATLAB/MCP | `../CLAUDE.md` / `../AGENTS.md` |
 

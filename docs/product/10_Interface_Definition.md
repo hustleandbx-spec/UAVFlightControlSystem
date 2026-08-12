@@ -6,7 +6,7 @@
 |---|---|
 | 文档名称 | FlightCore Interface Definition（接口定义） |
 | 版本 | v0.1 |
-| 状态 | **Draft（A2 契约全部关闭；字段级定稿 2026-08-07）** |
+| 状态 | **Draft（A2 契约全部关闭；字段级定稿 2026-08-07，数据字典落地同步 2026-08-12）** |
 | 来源 | `process/01_Session_and_Decision_Log.md` §6/§13/§13.x（DEC-072/074/081..083/085..090） |
 | 上游文档 | 07_System_Requirements；09_System_Logical_Architecture |
 | 维护规则 | 信号定义源 = `FC_SimulinkProject/1_Data_Dictionaries/BusConfig/config_*.m`（选择性复用 DEC-084）；字段级明细（单位/类型/序列化/取值范围）在此维护 |
@@ -97,7 +97,7 @@ MAVLink 承担遥测/指令/健康/文件传输；任务计划 = 自研富语义
 | GcsLinkStatusBus | 链路状态 | ✅ 复用 | 订阅发布（遥测） |
 | MissionStatusBus | MM 任务状态 | ✅ 复用 | 订阅发布（状态回报） |
 | RouteWindowBus | **MM 内部**滑动窗口（Prev/Cur/Next，含 IsFirst/Last） | 保留内部（不跨模块） | — |
-| GPS_BUS / IMU_BUS | 传感器测量 | ✅ 复用 | GPS 中速 / IMU 高速直连 |
+| GPSBus / IMUBus | 传感器测量 | ✅ 复用 | GPS 中速 / IMU 高速直连 |
 | DynamicModelBus | 动力学真值 | ✅ 复用 | MIL plant 输出 |
 | EscCmdBus | FC→电机指令（DEC-064） | ✅ 复用 | 直连（执行链末端） |
 | ThrustTorqueBus | 动力→动力学 | ✅ 复用 | plant 路径 |
@@ -207,22 +207,77 @@ Waypoint {
 
 **决策（DEC-088）：** 全字段占位、接口一次定型；未实现字段置空+标"已定义、未落地"；容量 400 定长数组、内存预算内（DEC-075）。**残留挂账：** 去首点速度与首航点速度覆盖的关系（DEC-078 推论②）。
 
+**数据字典扁平化编码（Simulink Bus 实际字段，同步 2026-08-12）：** A1 嵌套 schema 在 FC 内部扁平化为定长数组（满足 Simulink 代码生成；`bus_contracts.m` 逐字段锁定，与 `config_MissionPlanBus.m` 一致）。
+
+```
+MissionPlanBus — 扁平化（数据通道，订阅发布；Gateway→MM）
+{ Meta/Config 段:
+    TaskId uint32, Version uint32, Timestamp double,
+    Frame uint8, ReferencePointNED single[3], HeightRef uint8,
+    FinishAction uint8, LinkLossDefault uint8, SafeTakeoffHeight single,
+    DepartureSpeed single, DefaultSpeed single, DefaultClimbRate single,
+    ArrivalDefault single[4], DefaultYawMode uint8,
+  Waypoints 段（定长 400，有效数 = WaypointCount）:
+    WaypointCount uint16,
+    Lat single[400], Lon single[400], Height single[400],
+    Speed single[400], ClimbRate single[400],
+    PassMode uint8[400], YawMode uint8[400], YawParam single[400],
+    ArrivalPos single[400], ArrivalVel single[400], ArrivalAlt single[400], ArrivalYaw single[400],
+    ActionTrigger uint8[400], ActionCount uint8[400], PayloadValid boolean[400],
+    IsRisky boolean[400], CoordinatedTurn boolean[400],
+  Valid boolean }
+```
+
+**映射对照：** Coordinate{Frame, ReferencePoint, HeightRef} → 顶层 `Frame` / `ReferencePointNED` / `HeightRef`；Waypoint{Position, Speed, ClimbRate, PassMode, Yaw, Arrival} → 各 `[400]` 数组；Actions / Payload / IsRisky / CoordinatedTurn = 已定义未落地（DEC-088）。
+
 ### 契约 #6 命令/状态通道（DEC-089/090）
 
 ```
 CommanderRequestBus — GCS 写命令请求（订阅，命令事件；Gateway→Commander）
-{ CommandId uint32, Command 枚举{加锁/解锁|开始任务|接管|返航|降落|悬停|临时上传航点|载荷控制(后置)|...}, Params }
+{ CommandId uint32, Command 枚举{1=加锁,2=解锁,3=开始任务,4=返航,5=降落,6=悬停,7=接管,8=go-to-point激活,9=载荷控制(后置)}, Params single[8], Valid boolean }
+
 CommandAckBus — 命令结果（订阅，命令事件；Commander→Gateway→GCS；亦入 Logging DEC-090）
-{ CommandId uint32, Result 枚举{approved|rejected|aborted}, ReasonCode uint16, Message }
+{ CommandId uint32, Result 枚举{0=已批准,1=已拒绝,2=已中止}, ReasonCode uint16, Message uint8[32], Valid boolean }
+
 CommanderStatusBus — Commander 模块状态流（DEC-087）
-{ Armed 枚举{disarmed|armed}, CurrentMode, LastCommandResult 缓存, ... }
+{ Armed boolean, CurrentMode uint8, LastCommandResult uint8, LastCommandId uint32,
+  SafetyState uint8, SafetyDirective uint8, MissionDirective uint8, FailsafeActive boolean,
+  Valid boolean }
+```
+
+**外围命令/数据通道总线（字段级同步 2026-08-12）：**
+
+```
+MissionControlRequestBus — Commander 审查批准后路由到 MM 的操作请求（DEC-066/071/101/102）
+{ RequestId uint32, CommandId uint32, Action 枚举{1=开始任务,2=返航,3=降落,4=悬停,5=接管,6=go-to-point激活}, TargetPositionNED single[3], Valid boolean }
+
+MissionPlanAvailableBus — 计划可用通知（数据通道状态流，MM-004/005，不经 CommandAckBus）
+{ Available boolean, ReasonCode 枚举{1=不可解析,2=字段非法,3=容量>400,4=末航点非停,5=段结构非法}, PlanId uint32, Valid boolean }
 ```
 
 **决策（DEC-089/090）：** 逐条 Ack；**多事件时序**——同一 CommandId 可多次发布（approved→aborted），GCS 按 CommandId 聚合取最新、CommandId 单调递增，Ack 事件入 Logging 持久化（事后排查）；ReasonCode 集 = 起飞门 7 条逐条 + 阶段合法性 + 参数非法 + 安全否决（后置），粒度服务操作者 HMI（DEC-003），SUBSYS-REQ 展开；查询通道 request-response 独立于命令 Ack（DEC-066 通道②）。
 
 ### 契约 #7..N（复用收口）
 
-GPS_BUS / IMU_BUS（传感器测量，GPS 中速 / IMU 高速直连）、DynamicModelBus（动力学真值，MIL plant）、EscCmdBus（FC→电机指令，直连执行链末端，DEC-064 混合器输出）、ThrustTorqueBus（动力→动力学，plant 路径）、ExperimentTraceBus / RuntimeTruthBus（日志/真值，订阅）——全部 ✅ 复用；**FlightCmdBus 废弃**（DEC-063，被 TrajectorySetpointBus 取代）。
+GPSBus / IMUBus（传感器测量，GPS 中速 / IMU 高速直连）、DynamicModelBus（动力学真值，MIL plant）、EscCmdBus（FC→电机指令，直连执行链末端，DEC-064 混合器输出）、ThrustTorqueBus（动力→动力学，plant 路径）、ExperimentTraceBus / RuntimeTruthBus（日志/真值，订阅）——全部 ✅ 复用；**FlightCmdBus 废弃**（DEC-063，被 TrajectorySetpointBus 取代）。
+
+**GcsLinkStatusBus（链路状态，遥测 / 起飞门 SYS-REQ-008 输入；字段级同步 2026-08-12）：**
+
+```
+{ SourceId uint32, RxSequence uint32, LastRxTimeSec double, LinkQuality single, Connected boolean, Valid boolean }
+```
+
+**RouteWindowBus（MM 内部段滑动窗口，不跨模块发布，DEC-087/085；字段级同步 2026-08-12）：**
+
+```
+{ PlanId uint32, ItemIndex uint8, PreviousValid boolean, PreviousPositionNED single[3],
+  CurrentTaskType uint8, CurrentPositionNED single[3], CurrentYaw single,
+  AcceptanceRadius single, TerminalBehavior uint8, AdvancePolicy uint8, DwellTime single,
+  CruiseSpeed single, MaxAcceleration single, MaxJerk single,
+  NextValid boolean, NextPositionNED single[3], IsFirstItem boolean, IsLastItem boolean, Valid boolean }
+```
+
+> 注：RouteWindowBus 为 MM 加载时预切分的内部段视图（DEC-085/093，单计划槽 DEC-093），**不属订阅/直连对外契约**；`bus_contracts.m` 仅锁定核心结构。
 
 ## 5. 模块状态流体系（DEC-087）
 
@@ -230,3 +285,16 @@ GPS_BUS / IMU_BUS（传感器测量，GPS 中速 / IMU 高速直连）、Dynamic
 
 - 制导状态流 = NavigationStatusBus（承载完整状态含 Valid）
 - SE 状态流 = StateEstBus 数据经订阅发布（Commander 从订阅读 Status；控制环仍走直连）
+- MM 任务状态流 = MissionStatusBus（任务状态 + 进度标签 + 可行性标志位，MM-018）
+
+**模块状态流字段（同步 2026-08-12）：**
+
+```
+NavigationStatusBus — Navigator 制导状态流（NAV-005，DEC-087/062）
+{ ContractId uint32, GuidanceState 枚举{0=等待合同,1=段轨迹求值中,2=悬停保持,3=降落剖面}, Valid boolean }
+
+MissionStatusBus — MM 任务状态流（MM-018，DEC-087/067）
+{ PlanId uint32, PlanValid boolean, ExecutionPhase uint8, MissionOutcome uint8, MissionReason uint8,
+  CurrentItemIndex uint8, ItemCount uint8, ReachedItemIndex int16, ActiveContractId uint32,
+  ExecutionHealthy boolean, MissionFaultCode uint16, LandingCompleted boolean, Valid boolean }
+```

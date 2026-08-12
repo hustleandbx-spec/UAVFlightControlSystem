@@ -156,22 +156,53 @@ colcon build --symlink-install
 source install/setup.bash
 ```
 
-### 3. 启动联合仿真
+### 3. 一键启动联合仿真
 
 ```bash
-ros2 launch flightcore_gazebo_system \
-  flightcore_gazebo_cosim.launch.py \
-  gui:=true max_epochs:=15000 progress_timeout_ms:=10000
+cd ~/uavsingle_ros2_ws
+./src/scripts/run_flightcore_gazebo_runtime.sh --epochs 15000
 ```
 
-另开一个已 source 工作区的 WSL 终端：
+脚本负责启动 paused Gazebo、generated FlightCore、Coordinator 和
+PlotJuggler，等待完整 ROS 图匹配后再执行 PRIME 与启动门。脚本使用
+PlotJuggler 3.17.2 的 `--start_streamer` 自动恢复布局中保存的 ROS 2 话题；
+检测到全部实时订阅已建立后才推进仿真，因此不依赖人工确认框，也不会漏掉
+PRIME 与第 0 拍数据。布局同时启用 PlotJuggler 原生的无限流式缓存
+（界面显示 `=inf`），不会按最近若干秒裁剪早期样本；四张图在每次数据刷新时
+自动缩放到从本次仿真首个样本到当前样本的完整时间范围。
+
+默认 PlotJuggler 面板显示：
+
+- GPS 高度与 NED 垂向速度；
+- 四路执行器命令；
+- 三轴 IMU 加速度；
+- ObservationReady 的 step、iteration 与传感器 mask。
+
+每次运行在 `~/uavsingle_runs/<时间>_session_<ID>/` 下生成互相独立的日志：
+
+- `orchestrator.log`：启动顺序、就绪门、PRIME、启动和最终判定；
+- `simulation.log`：ROS 2 launch、generated node、Coordinator 与 Gazebo
+  的完整运行日志；
+- `plotjuggler.log`：PlotJuggler 和 ROS 2 streaming 插件日志；
+- `run_metadata.env`：session、epoch、timeout 与本次运行目录。
+
+默认情况下，当前终端只显示精简的中文编排状态，脚本另外打开“联合仿真日志”
+和“PlotJuggler 实时数据日志”两个独立控制台窗口。自动化或无桌面运行可增加
+`--no-log-windows`。“联合仿真日志”窗口每 1 秒显示一次最新锁步进度；
+`simulation.log` 文件仍保存全部逐 epoch 原始消息。
+
+编排入口和两个就绪探针自产的提示、错误与状态日志统一使用中文。
+`simulation.log` 和 `plotjuggler.log` 同时保留 ROS 2、Gazebo、generated node
+及 PlotJuggler 的原始第三方日志，避免翻译或过滤破坏诊断证据。
+
+常用无界面/自动清理运行：
 
 ```bash
-ros2 service call /flightcore/gazebo/prime_session \
-  flightcore_gazebo_msgs/srv/PrimeSession "{session_id: 2026073001}"
+./src/scripts/run_flightcore_gazebo_runtime.sh \
+  --epochs 1000 --no-gui --no-plotjuggler
 
-ros2 service call /flightcore/gazebo/start_coordinator \
-  std_srvs/srv/Trigger "{}"
+./src/scripts/run_flightcore_gazebo_runtime.sh \
+  --epochs 15000 --close-plotjuggler-on-exit
 ```
 
 成功日志必须包含：

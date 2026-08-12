@@ -1,10 +1,10 @@
 # CLAUDE.md
 
-本文件为 Claude Code 在 UAV 单机飞控项目中的操作指引，覆盖 MATLAB/Simulink MBD 开发工作流。架构入口见 [README.md](README.md)，当前执行顺序见 [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md)。
+本文件为 Claude Code 在 UAV 单机飞控项目中的操作指引，覆盖 MATLAB/Simulink MBD 开发工作流。架构入口见 [README.md](README.md)，当前执行顺序见 [docs/process/05_Development_Plan.md](docs/process/05_Development_Plan.md)。
 
 ## 启动行为
 
-每次对话开始时先读取本项目下的 `.claude/skills/simulink-mbd.md`，再读取根目录 README、开发计划和相关契约文档。
+每次对话开始时先读取本项目下的 `.claude/skills/simulink-mbd.md`，再读取根目录 README、开发计划（`docs/process/05_Development_Plan.md`）和相关契约文档。
 
 ## 启动 MATLAB
 
@@ -94,7 +94,7 @@ configure_project()
 | 内容 | 位置 |
 |---|---|
 | 项目入口和文档体系 | `README.md` |
-| 当前开发计划 | `DEVELOPMENT_PLAN.md` |
+| 当前开发计划 | `docs/process/05_Development_Plan.md` |
 | 路线图与消息思想 | `docs/vision/` |
 | InterfaceContract 与 Runtime Isolation（历史） | `docs/archive/contracts/` |
 | ROS2 topic 与 Simulink Bus 映射 | `FC_SimulinkProject/3_Integration/ROS2/` |
