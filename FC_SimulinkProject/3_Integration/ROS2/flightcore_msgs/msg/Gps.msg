@@ -1,4 +1,4 @@
-# Maps to Simulink GPS_BUS.
+# Maps to Simulink GPSBus.
 builtin_interfaces/Time stamp
 float64 timestamp_sec
 uint32 sequence

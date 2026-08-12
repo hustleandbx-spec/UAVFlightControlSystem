@@ -199,18 +199,21 @@ SE 状态流          = StateEstBus 数据经订阅发布（Commander 读 Status
 ## 5. 实施工作包与里程碑（顺序 = 约束 8 硬性）
 
 > 总顺序：**M1 行为测试对齐 → M2 L3 模型字段对齐 → M3 数值回填 MBD → M4 VER 执行**。不可跳步；每步先改测试再动模型（约束 8：契约变更先测试）。
+>
+> **当前进度：M1 已完成（2026-08-12）→ 下一步 M2 L3 模型字段对齐。**
 
 ### M0 卫生与基线（已完成事项确认，不再执行）
 - ✅ 定义层完成：BusConfig 21 条与 A2 契约对齐、GlobalTypes.sldd 重建（21 总线）、L1 批测 21/21 PASS、L2 字典可构建。
 - ✅ SE 链闭合：G-001..004 过签；数值【暂定】注册（15 + 本计划 §6）。
 - **门禁 G-005 前置**：M1..M4 全部完成。
 
-### M1 行为测试对齐新契约（约束 8 第一优先）
+### M1 行为测试对齐新契约（约束 8 第一优先）——✅ 已完成（2026-08-12）
 - **目标**：让 `FC_SimulinkProject/4_Test/features/*.feature` 与 BusConfig 新 schema 一致，先锁定契约再动模型。
 - **动作**：按 §4 契约字段重写/校验以下 .feature 的断言：`mission_manager.feature`、`navigator.feature`、`commander_operational_state.feature`、`navigator_stop_and_go.feature`、`mission_manager_structured_objective.feature`、`mission_manager_land_completion.feature`、`mission_manager_commander_integration.feature`、`attitude_rate_complete_controller.feature`；同步检查 `4_Test/test_*.m` 契约测试与 `bus_contracts.m` 字段引用。
 - **注意**：FlightCmdBus 废弃（CommandGenerator 旧输出）、NavigationContractBus v2 字段、NavigationStatusBus 制导状态流、MissionPlanBus A1 400 扁平化——所有引用这些字段的测试/脚本同步更新。
 - **验收判据**：`.feature` 可被新字典解析、断言与 §4 字段一一对应；`test_bus_contracts.m` 批测全绿。
 - **交付**：行为测试锁定新契约（此时模型仍旧，测试预期**红**——这是中间态，进入 M2 转绿）。
+- **✅ 完成记录（2026-08-12）**：① `.feature` 全部移入 `4_Test/features/`（对齐本计划路径约定）；② 7 个 `.feature` 全面重写对齐 §4 新契约（`navigator`/`navigator_stop_and_go`/`commander_operational_state`/`mission_manager`/`mission_manager_structured_objective`/`mission_manager_land_completion`/`mission_manager_commander_integration`），`attitude_rate_complete_controller` 无需改；front-matter 换新字段路径、断言换新语义、删除引用已删行为的旧场景；③ L1 批测 `test_bus_contracts.m` **21/21 PASS**；④ `navigator`/`mission_manager` `.feature` 实测可被新字典解析、失败于模型编译（预期红，M2 转绿）；⑤ 旧字段残留扫描 0 命中。**范围排除（挂账 M2）**：`4_Test/test_*.m` 契约测试字段对齐（项目负责人指示 M1 忽略）。**模型接口挂账（M2）**：Commander 入改 `CommanderRequestBus` + 增 `CommandAckBus` 出；MissionManager 增 `MissionPlanAvailableBus` 出 + 触地判据驱动信号接口。
 
 ### M2 L3 模型字段对齐（主线程核心，G-004 遗留）
 - **目标**：各 .slx 端口/信号/内部字段与 BusConfig 新 schema 对齐，模型可对新字典编译运行。

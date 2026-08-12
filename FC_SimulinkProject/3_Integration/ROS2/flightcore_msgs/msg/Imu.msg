@@ -1,4 +1,4 @@
-# Maps to Simulink IMU_BUS.
+# Maps to Simulink IMUBus.
 builtin_interfaces/Time stamp
 float64 timestamp_sec
 uint32 sequence

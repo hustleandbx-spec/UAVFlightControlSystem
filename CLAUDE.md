@@ -4,7 +4,7 @@
 
 ## 启动行为
 
-每次对话开始时先读取本项目下的 `.claude/skills/simulink-mbd.md`，再读取根目录 README、开发计划（`docs/process/05_Development_Plan.md`）和相关契约文档。
+每次对话开始时先读取根目录 README、开发计划（`docs/process/05_Development_Plan.md`）和相关契约文档。MBD 技能由 `.claude/settings.json` 启用的插件提供：`model-based-design-core`（v0.6.0，含 `model_check` 用法）、`matlab-core`（v0.4.1）、`matlab-software-development`（v0.5.1），均于 2026-08-12 同步至官方最新（需重启会话生效）。项目内已无 `.claude/skills/` 文件。插件市场源在 `D:\AI\MPCserver\matlabMCP\` 下两个仓库（git 已对齐官方 main，旧版备份 `*.bak-20260812`）。
 
 ## 启动 MATLAB
 
@@ -40,17 +40,20 @@ validate_installation
 - MCP 能成功调用 `model_overview`。
 - 工程已打开，数据字典已加载。
 - 工作路径为 `FC_SimulinkProject/`。
+- MCP 注册的扩展文件必须指向 `C:/Users/89447/.matlab/agentic-toolkits/simulink/tools/tools.json`（旧路径 `D:/个人/matlabMCP/...` 已失效），可用 `claude mcp list` 检查。
 
-当前 Simulink Agentic Toolkit 注册的六个模型工具：
+当前本地安装注册的八个模型工具（2026-08-12 同步自官方 main；旧版 SATK-v2026.05.21 已备份于 `~/.matlab/agentic-toolkits/simulink.bak-20260812`）：
 
 | 工具 | 用途 |
 |---|---|
 | `model_overview` | 查看模型/子系统层级结构、接口和信号连线 |
-| `model_read` | 读取块参数、端口、数据类型、MATLAB Function 代码等 |
+| `model_read` | 读取块拓扑、信号连线与算法表达式（`@Param(变量)` 引用用 `model_resolve_params` 解析数值） |
 | `model_edit` | 增删改模型块和参数 |
-| `model_query_params` | 查询模型参数值 |
-| `model_resolve_params` | 追踪参数引用链 |
-| `model_test` | 运行 Simulink Test 测试用例 |
+| `model_query_params` | 查询块/信号/模型配置参数值 |
+| `model_resolve_params` | 将 `model_read` 中的变量引用解析为工作区/数据字典中的数值并定位来源 |
+| `model_check` | 结构健康检查：未连接端口、悬空信号、Stateflow edit-time lint |
+| `model_read_diagnostics` | 读取 Diagnostic Viewer 的诊断消息（error/warning/info） |
+| `model_test` | 运行 Gherkin 格式行为测试（先加载 `testing-simulink-models` 技能） |
 
 `evaluate_matlab_code`、`check_matlab_code` 属于 MATLAB MCP Core Server 能力，仅在当前 MCP 客户端实际暴露时使用。
 

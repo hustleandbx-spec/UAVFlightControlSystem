@@ -10,7 +10,7 @@
 - Reliable Publish `/flightcore/gazebo/actuator_command`，类型
   `flightcore_gazebo_msgs/ActuatorCommand`
 
-IMU 与 GPS 消息分别直接映射到 FlightCore 的 `IMU_BUS` 和 `GPS_BUS`。模型中
+IMU 与 GPS 消息分别直接映射到 FlightCore 的 `IMUBus` 和 `GPSBus`。模型中
 没有 StepResult、StepResultAdapter、接收门控或 Level-2 MATLAB ROS 2
 S-Function。执行器事务的 step/iteration 字段由 harness 执行计数产生。
 

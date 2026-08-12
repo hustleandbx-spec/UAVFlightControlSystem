@@ -49,7 +49,6 @@
 |---|---|
 | SE 体系怎么组织 / 从哪进 | `00_SE_Management_Plan.md` |
 | 决策记录 / 时间链 / DEC | `process/01_Session_and_Decision_Log.md` |
-| 当前项目主线是什么 | `../README.md` |
 | 下一步怎么做（开发执行） | `process/05_Development_Plan.md`（实施唯一入口）；SE 续接 = `Prompt_Continue.md`（旧 `../DEVELOPMENT_PLAN.md` 已于 2026-08-12 删除） |
 | 最近做到了哪里 | PBOS `runtime/handoffs/UAVSingle.md` |
 | 怎么启动 MATLAB/MCP | `../CLAUDE.md` / `../AGENTS.md` |
