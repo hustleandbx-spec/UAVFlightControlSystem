@@ -1,0 +1,813 @@
+# =============================================================================
+# 传感器噪声参数 — SensorDict.sldd 的 YAML 源定义
+# =============================================================================
+# 本文件是 SensorDict.sldd 的唯一事实来源。
+# 修改参数后运行 create_SensorDict() 重新生成字典。
+#
+# 注意区分：本文件定义传感器模型的物理噪声参数（注入仿真），
+# state_estimation_params.yaml 定义状态估计器的滤波参数（Q/R 矩阵）。
+# 两者可以不同——用于测试滤波器对模型失配的鲁棒性。
+# =============================================================================
+
+_meta:
+  dict_name: SensorDict.sldd
+  dict_path: 2_Model/sensor_model
+  description: "传感器模型噪声与配置参数（IMU噪声/偏置/量程、GPS噪声/更新率）"
+  references:
+    - StateEstContractDict.sldd
+    - SimulationContractDict.sldd
+
+# =============================================================================
+# IMU 传感器参数
+# =============================================================================
+
+IMU_ACC_NOISE:
+  rename_to: IMU_ACC_NOISE
+  type: single
+  default: 0.001
+  min: 0.0001
+  max: 0.1
+  unit: "m/s^2/sqrt(Hz)"
+  group: imu_noise
+  storage_class: ExportedGlobal
+  description: "加速度计白噪声密度。Band-Limited White Noise 块的噪声强度"
+  tunable_in_flight: false
+  safety_level: routine
+
+IMU_GYR_NOISE:
+  rename_to: IMU_GYR_NOISE
+  type: single
+  default: 0.0001
+  min: 0.00001
+  max: 0.01
+  unit: "rad/s/sqrt(Hz)"
+  group: imu_noise
+  storage_class: ExportedGlobal
+  description: "陀螺仪白噪声密度。Band-Limited White Noise 块的噪声强度"
+  tunable_in_flight: false
+  safety_level: routine
+
+IMU_ACC_BIAS:
+  rename_to: IMU_ACC_BIAS
+  type: single
+  default: [0.05, -0.03, 0.08]
+  min: [-1.0, -1.0, -1.0]
+  max: [1.0, 1.0, 1.0]
+  unit: "m/s^2"
+  group: imu_bias
+  storage_class: ExportedGlobal
+  description: "加速度计三轴常值偏置 [x, y, z]"
+  tunable_in_flight: false
+  safety_level: routine
+
+IMU_GYR_BIAS:
+  rename_to: IMU_GYR_BIAS
+  type: single
+  default: [0.001, -0.002, 0.001]
+  min: [-0.1, -0.1, -0.1]
+  max: [0.1, 0.1, 0.1]
+  unit: "rad/s"
+  group: imu_bias
+  storage_class: ExportedGlobal
+  description: "陀螺仪三轴常值偏置 [x, y, z]"
+  tunable_in_flight: false
+  safety_level: routine
+
+IMU_ACC_BIAS_WALK:
+  rename_to: IMU_ACC_BIAS_WALK
+  type: single
+  default: 0.0001
+  min: 0.0
+  max: 0.01
+  unit: "m/s^2/sqrt(s)"
+  group: imu_bias
+  storage_class: ExportedGlobal
+  description: "加速度计偏置随机游走噪声密度"
+  tunable_in_flight: false
+  safety_level: routine
+
+IMU_GYR_BIAS_WALK:
+  rename_to: IMU_GYR_BIAS_WALK
+  type: single
+  default: 0.00001
+  min: 0.0
+  max: 0.001
+  unit: "rad/s/sqrt(s)"
+  group: imu_bias
+  storage_class: ExportedGlobal
+  description: "陀螺仪偏置随机游走噪声密度"
+  tunable_in_flight: false
+  safety_level: routine
+
+IMU_ACC_SCALE:
+  rename_to: IMU_ACC_SCALE
+  type: single
+  default: 0.002
+  min: 0.0
+  max: 0.05
+  unit: "-"
+  group: imu_scale
+  storage_class: ExportedGlobal
+  description: "加速度计比例因子误差（无量纲百分比）。输出 = true * (1 + SCALE)"
+  tunable_in_flight: false
+  safety_level: routine
+
+IMU_GYR_SCALE:
+  rename_to: IMU_GYR_SCALE
+  type: single
+  default: 0.002
+  min: 0.0
+  max: 0.05
+  unit: "-"
+  group: imu_scale
+  storage_class: ExportedGlobal
+  description: "陀螺仪比例因子误差（无量纲百分比）。输出 = true * (1 + SCALE)"
+  tunable_in_flight: false
+  safety_level: routine
+
+IMU_SAT_ACC:
+  rename_to: IMU_SAT_ACC
+  type: single
+  default: 156.96
+  min: 10.0
+  max: 500.0
+  unit: "m/s^2"
+  group: imu_saturation
+  storage_class: ExportedGlobal
+  description: "加速度计量程上限（±值）。默认 ±16g = ±156.96 m/s²"
+  tunable_in_flight: false
+  safety_level: critical
+
+IMU_SAT_GYR:
+  rename_to: IMU_SAT_GYR
+  type: single
+  default: 34.907
+  min: 1.0
+  max: 100.0
+  unit: "rad/s"
+  group: imu_saturation
+  storage_class: ExportedGlobal
+  description: "陀螺仪量程上限（±值）。默认 ±2000°/s = ±34.907 rad/s"
+  tunable_in_flight: false
+  safety_level: critical
+
+IMU_SAMPLE_RATE:
+  rename_to: IMU_SAMPLE_RATE
+  type: single
+  default: 1000
+  min: 100
+  max: 8000
+  unit: "Hz"
+  group: imu_config
+  storage_class: ExportedGlobal
+  description: "IMU 采样率。与模型固定步长一致"
+  tunable_in_flight: false
+  safety_level: critical
+# =============================================================================
+# GPS / RTK 传感器参数 — 误差预算（DOP 方案 L1）
+# =============================================================================
+# DOP 由 GnssScenarioBus 场景输入提供；σ 由误差预算派生并写入 GPSBus.Eph/Epv：
+#   码/浮点解 : σ_h = HDOP * GPS_UERE_H ;  σ_v = VDOP * GPS_UERE_V
+#   RTK 固定  : σ_h = sqrt(RTK_SIGMA_H^2 + (BASELINE_PPM*1e-6*baseline)^2 + MULTIPATH_SIGMA^2)
+#   时间相关  : 一阶 Gauss-Markov，相关时间 GM_TAU，稳态 σ = GM_SIGMA
+# gpsSensor（官方）只做白噪声与失锁衰减；DOP 缩放、1ppm 基线项、多路径与
+# Gauss-Markov 相关项由 sensor_GPS_model 外壳承载，不重复实现官方误差机理。
+
+GPS_UERE_H:
+  rename_to: GPS_UERE_H
+  type: single
+  default: 0.6
+  min: 0.01
+  max: 10.0
+  unit: "m"
+  group: gps_budget
+  storage_class: ExportedGlobal
+  description: "码/浮点解水平测距误差 UERE(1σ)，HDOP=1 下的等效水平σ。σ_h = HDOP * UERE_H"
+  tunable_in_flight: false
+  safety_level: routine
+
+GPS_UERE_V:
+  rename_to: GPS_UERE_V
+  type: single
+  default: 1.2
+  min: 0.01
+  max: 20.0
+  unit: "m"
+  group: gps_budget
+  storage_class: ExportedGlobal
+  description: "码/浮点解垂直测距误差 UERE(1σ)。σ_v = VDOP * UERE_V"
+  tunable_in_flight: false
+  safety_level: routine
+
+GPS_UERE_VEL:
+  rename_to: GPS_UERE_VEL
+  type: single
+  default: 0.1
+  min: 0.001
+  max: 5.0
+  unit: "m/s"
+  group: gps_budget
+  storage_class: ExportedGlobal
+  description: "测速(多普勒)误差(1σ)，三轴共用，与几何弱相关"
+  tunable_in_flight: false
+  safety_level: routine
+
+GPS_RTK_SIGMA_H:
+  rename_to: GPS_RTK_SIGMA_H
+  type: single
+  default: 0.015
+  min: 0.001
+  max: 1.0
+  unit: "m"
+  group: gps_budget
+  storage_class: ExportedGlobal
+  description: "RTK 固定解水平基座σ(1σ)，对应 RTK 定位 ±1~2cm"
+  tunable_in_flight: false
+  safety_level: routine
+
+GPS_RTK_SIGMA_V:
+  rename_to: GPS_RTK_SIGMA_V
+  type: single
+  default: 0.025
+  min: 0.001
+  max: 2.0
+  unit: "m"
+  group: gps_budget
+  storage_class: ExportedGlobal
+  description: "RTK 固定解垂直基座σ(1σ)，典型 1.5~2x 水平"
+  tunable_in_flight: false
+  safety_level: routine
+
+GPS_BASELINE_PPM:
+  rename_to: GPS_BASELINE_PPM
+  type: single
+  default: 1.0
+  min: 0.0
+  max: 50.0
+  unit: "ppm"
+  group: gps_budget
+  storage_class: ExportedGlobal
+  description: "基线相关项(ppm)。误差贡献 = PPM*1e-6*基线长(m)，固定解水平项内平方相加"
+  tunable_in_flight: false
+  safety_level: routine
+
+GPS_MULTIPATH_SIGMA:
+  rename_to: GPS_MULTIPATH_SIGMA
+  type: single
+  default: 0.01
+  min: 0.0
+  max: 5.0
+  unit: "m"
+  group: gps_budget
+  storage_class: ExportedGlobal
+  description: "多路径/环境残差σ(1σ)，固定解下仍存在，标称近地取小值"
+  tunable_in_flight: false
+  safety_level: routine
+
+GPS_DECAY_FACTOR:
+  rename_to: GPS_DECAY_FACTOR
+  type: single
+  default: 0.5
+  min: 0.0
+  max: 10.0
+  unit: "1/s"
+  group: gps_config
+  storage_class: ExportedGlobal
+  description: "gpsSensor 失锁后精度衰减率"
+  tunable_in_flight: false
+  safety_level: routine
+
+GPS_GM_TAU:
+  rename_to: GPS_GM_TAU
+  type: single
+  default: 30.0
+  min: 0.1
+  max: 1000.0
+  unit: "s"
+  group: gps_gm
+  storage_class: ExportedGlobal
+  description: "GNSS 时间相关误差一阶 Gauss-Markov 相关时间。官方 gpsSensor 不含此项"
+  tunable_in_flight: false
+  safety_level: routine
+
+GPS_GM_SIGMA:
+  rename_to: GPS_GM_SIGMA
+  type: single
+  default: 0.01
+  min: 0.0
+  max: 5.0
+  unit: "m"
+  group: gps_gm
+  storage_class: ExportedGlobal
+  description: "GNSS 时间相关误差稳态σ(1σ)。叠加在官方白噪声之外"
+  tunable_in_flight: false
+  safety_level: routine
+
+GPS_SEED:
+  rename_to: GPS_SEED
+  type: double
+  default: 23341
+  min: 0
+  max: 4294967295
+  unit: ""
+  group: gps_config
+  storage_class: ExportedGlobal
+  description: "gpsSensor/外壳随机流种子，保证确定性复现"
+  tunable_in_flight: false
+  safety_level: routine
+
+GPS_HDOP_NOMINAL:
+  rename_to: GPS_HDOP_NOMINAL
+  type: single
+  default: 1.0
+  min: 0.5
+  max: 10.0
+  unit: ""
+  group: gps_scenario
+  storage_class: ExportedGlobal
+  description: "无场景驱动时的标称 HDOP（场景 Valid=false 时使用）"
+  tunable_in_flight: false
+  safety_level: routine
+
+GPS_VDOP_NOMINAL:
+  rename_to: GPS_VDOP_NOMINAL
+  type: single
+  default: 1.5
+  min: 0.5
+  max: 10.0
+  unit: ""
+  group: gps_scenario
+  storage_class: ExportedGlobal
+  description: "无场景驱动时的标称 VDOP"
+  tunable_in_flight: false
+  safety_level: routine
+
+GPS_FIXTYPE_NOMINAL:
+  rename_to: GPS_FIXTYPE_NOMINAL
+  type: single
+  default: 6
+  min: 0
+  max: 8
+  unit: ""
+  group: gps_scenario
+  storage_class: ExportedGlobal
+  description: "无场景驱动时的标称 FixType（6 = RTK_FIXED，MAVLink GPS_FIX_TYPE）"
+  tunable_in_flight: false
+  safety_level: routine
+
+GPS_NUMSAT_NOMINAL:
+  rename_to: GPS_NUMSAT_NOMINAL
+  type: single
+  default: 16
+  min: 0
+  max: 64
+  unit: ""
+  group: gps_scenario
+  storage_class: ExportedGlobal
+  description: "无场景驱动时的标称卫星数"
+  tunable_in_flight: false
+  safety_level: routine
+GPS_SAMPLE_RATE:
+  rename_to: GPS_SAMPLE_RATE
+  type: single
+  default: 5
+  min: 1
+  max: 20
+  unit: "Hz"
+  group: gps_config
+  storage_class: ExportedGlobal
+  description: "GPS 更新率。通过 Rate Transition 实现降频"
+  tunable_in_flight: false
+  safety_level: routine
+
+GPS_REF_LAT:
+  rename_to: GPS_REF_LAT
+  type: single
+  default: 0.0
+  min: -90.0
+  max: 90.0
+  unit: "deg"
+  group: gps_config
+  storage_class: ExportedGlobal
+  description: "Flat Earth to LLA 参考纬度。NED 坐标系原点"
+  tunable_in_flight: false
+  safety_level: routine
+
+GPS_REF_LON:
+  rename_to: GPS_REF_LON
+  type: single
+  default: 10.0
+  min: -180.0
+  max: 180.0
+  unit: "deg"
+  group: gps_config
+  storage_class: ExportedGlobal
+  description: "Flat Earth to LLA 参考经度。NED 坐标系原点"
+
+# =============================================================================
+# 气压计传感器参数 — TDK InvenSense ICP-20100
+# =============================================================================
+# 误差内核: altimeterSensor（Sensor Fusion and Tracking Toolbox）
+# 高度↔压力换算: atmoscoesa（Aerospace Toolbox，1976 COESA 标准大气）
+#
+# 器件规格（TDK 公开规格）:
+#   压力范围 30~110 kPa；压力噪声 0.4 Pa RMS；温度系数 ±0.5 Pa/°C；
+#   可探测 <5 cm 高度变化；可配置 ODR/OSR；数字压力+温度输出。
+#
+# 量纲说明: altimeterSensor 的 ConstantBias/NoiseDensity/BiasInstability 为高度域。
+#   海平面附近 dp/dh ≈ -12.0 Pa/m
+#   0.4 Pa RMS → 0.4/12.0 ≈ 0.033 m RMS
+#   噪声密度 ≈ 0.033 / sqrt(BW)，BW 取 ODR/2 = 25 Hz → ≈ 0.0067 m/sqrt(Hz)
+
+BARO_SAMPLE_RATE:
+  rename_to: BARO_SAMPLE_RATE
+  type: single
+  default: 50
+  min: 1
+  max: 200
+  unit: "Hz"
+  group: baro_config
+  storage_class: ExportedGlobal
+  description: "气压计更新率（ICP-20100 可配置 ODR），同时作为 altimeterSensor 的 SampleRate"
+  tunable_in_flight: false
+  safety_level: routine
+
+BARO_SEED:
+  rename_to: BARO_SEED
+  type: double
+  default: 45601
+  min: 0
+  max: 4294967295
+  unit: ""
+  group: baro_config
+  storage_class: ExportedGlobal
+  description: "altimeterSensor 随机流种子，保证确定性复现"
+  tunable_in_flight: false
+  safety_level: routine
+
+BARO_CONST_BIAS:
+  rename_to: BARO_CONST_BIAS
+  type: single
+  default: 0.5
+  min: 0.0
+  max: 10.0
+  unit: "m"
+  group: baro_bias
+  storage_class: ExportedGlobal
+  description: "标定后残余常值高度偏置。绝对偏置由 QNH/起飞标定承担，此处只建模残余"
+  tunable_in_flight: false
+  safety_level: routine
+
+BARO_NOISE_DENSITY:
+  rename_to: BARO_NOISE_DENSITY
+  type: single
+  default: 0.007
+  min: 1.0e-4
+  max: 1.0
+  unit: "m/sqrt(Hz)"
+  group: baro_noise
+  storage_class: ExportedGlobal
+  description: "高度域噪声密度。ICP-20100 压力噪声 0.4 Pa RMS ≈ 0.033 m RMS；BW≈25 Hz → 0.0067，保守取 0.007。P2 按 datasheet 噪声-OSR 表细化"
+  tunable_in_flight: false
+  safety_level: routine
+
+BARO_BIAS_INSTABILITY:
+  rename_to: BARO_BIAS_INSTABILITY
+  type: single
+  default: 0.1
+  min: 0.0
+  max: 5.0
+  unit: "m"
+  group: baro_noise
+  storage_class: ExportedGlobal
+  description: "高度域 bias instability(1/f)。ICP-20100 长期稳定性优；待 datasheet 长期漂移数值回填"
+  tunable_in_flight: false
+  safety_level: routine
+
+BARO_DECAY_FACTOR:
+  rename_to: BARO_DECAY_FACTOR
+  type: single
+  default: 0.0
+  min: 0.0
+  max: 1.0
+  unit: "-"
+  group: baro_noise
+  storage_class: ExportedGlobal
+  description: "altimeterSensor bias instability 噪声衰减因子（官方默认 0）。官方语义已确认 DecayFactor = bias instability noise decay factor"
+  tunable_in_flight: false
+  safety_level: routine
+
+BARO_RANGE_MIN:
+  rename_to: BARO_RANGE_MIN
+  type: single
+  default: 30000.0
+  min: 1000.0
+  max: 110000.0
+  unit: "Pa"
+  group: baro_range
+  storage_class: ExportedGlobal
+  description: "量程下限（ICP-20100 标称 30 kPa），用于静压饱和限幅"
+  tunable_in_flight: false
+  safety_level: routine
+
+BARO_RANGE_MAX:
+  rename_to: BARO_RANGE_MAX
+  type: single
+  default: 110000.0
+  min: 30000.0
+  max: 130000.0
+  unit: "Pa"
+  group: baro_range
+  storage_class: ExportedGlobal
+  description: "量程上限（ICP-20100 标称 110 kPa），用于静压饱和限幅"
+  tunable_in_flight: false
+  safety_level: routine
+
+BARO_RESOLUTION:
+  rename_to: BARO_RESOLUTION
+  type: single
+  default: 0.2
+  min: 0.001
+  max: 10.0
+  unit: "Pa"
+  group: baro_quantization
+  storage_class: ExportedGlobal
+  description: "输出量化步长（P2 使用，约 1.7 cm）。暂取 0.2 Pa，待 datasheet 输出分辨率回填"
+  tunable_in_flight: false
+  safety_level: routine
+
+BARO_LPF_TAU:
+  rename_to: BARO_LPF_TAU
+  type: single
+  default: 0.016
+  min: 0.0
+  max: 1.0
+  unit: "s"
+  group: baro_filter
+  storage_class: ExportedGlobal
+  description: "内部低通时间常数（P2 使用），由 ODR/数字滤波带宽推得，约 1/(2*pi*10Hz)"
+  tunable_in_flight: false
+  safety_level: routine
+
+BARO_PNEUMATIC_TAU:
+  rename_to: BARO_PNEUMATIC_TAU
+  type: single
+  default: 0.3
+  min: 0.0
+  max: 5.0
+  unit: "s"
+  group: baro_pneumatic
+  storage_class: ExportedGlobal
+  description: "气路一阶滞后时间常数（P3 可选）。0 = 关闭"
+  tunable_in_flight: false
+  safety_level: routine
+
+BARO_STATIC_PORT_KQ:
+  rename_to: BARO_STATIC_PORT_KQ
+  type: single
+  default: 0.0
+  min: -1.0
+  max: 1.0
+  unit: "-"
+  group: baro_pneumatic
+  storage_class: ExportedGlobal
+  description: "静压源位置误差系数（P3 可选），delta_p = KQ * 0.5*rho*V^2。0 = 关闭"
+  tunable_in_flight: false
+  safety_level: routine
+
+BARO_TEMP_OFFSET:
+  rename_to: BARO_TEMP_OFFSET
+  type: single
+  default: 0.5
+  min: -10.0
+  max: 10.0
+  unit: "degC"
+  group: baro_temperature
+  storage_class: ExportedGlobal
+  description: "温度通道常值偏置（ICP-20100 集成温度传感器）"
+  tunable_in_flight: false
+  safety_level: routine
+
+BARO_TEMP_NOISE:
+  rename_to: BARO_TEMP_NOISE
+  type: single
+  default: 0.1
+  min: 0.0
+  max: 5.0
+  unit: "degC"
+  group: baro_temperature
+  storage_class: ExportedGlobal
+  description: "温度通道白噪声标准差"
+  tunable_in_flight: false
+  safety_level: routine
+
+BARO_REF_ALT_MSL:
+  rename_to: BARO_REF_ALT_MSL
+  type: single
+  default: 0.0
+  min: -500.0
+  max: 9000.0
+  unit: "m"
+  group: baro_reference
+  storage_class: ExportedGlobal
+  description: "本地 NED 原点海拔（绝对压换算参考）。只放字典，不作为模型输入端口"
+  tunable_in_flight: false
+  safety_level: routine
+
+BARO_QNH:
+  rename_to: BARO_QNH
+  type: single
+  default: 101325.0
+  min: 80000.0
+  max: 110000.0
+  unit: "Pa"
+  group: baro_reference
+  storage_class: ExportedGlobal
+  description: "海平面标准气压参考（QNH），供估计器压力→高度换算"
+  tunable_in_flight: false
+  safety_level: routine
+  tunable_in_flight: false
+  safety_level: routine
+
+# =============================================================================
+# 磁力计传感器参数 — 工业级 MEMS 三轴磁力计（型号待定）
+# =============================================================================
+# 误差内核: imuSensor('accel-mag') + magparams（Sensor Fusion and Tracking Toolbox）
+# 参考场:   wrldmagm（Aerospace Toolbox，WMM；NED nT -> 边界换算 uT）
+#
+# 量纲: magparams 全部为 uT 口径（MeasurementRange/ConstantBias/NoiseDensity/
+#   BiasInstability/RandomWalk/TemperatureBias 均为 uT 系；AxesMisalignment 为 %，
+#   100 = 单位阵 = 无失准）。已在本机 R2025b 实测确认。
+# 姿态约定: imuSensor 的 orientation 为 NED->body（C_nb）；仓库 Attitude_quat 为
+#   body->NED（C_bn），故模型中须取其共轭。
+# 全部数值【暂定】，待指定磁力计型号后按 datasheet/Allan 方差回填。
+
+MAG_SAMPLE_RATE:
+  rename_to: MAG_SAMPLE_RATE
+  type: single
+  default: 100
+  min: 10
+  max: 400
+  unit: "Hz"
+  group: mag_config
+  storage_class: ExportedGlobal
+  description: "磁力计更新率，同时作为 imuSensor 的 SampleRate"
+  tunable_in_flight: false
+  safety_level: routine
+
+MAG_SEED:
+  rename_to: MAG_SEED
+  type: double
+  default: 77101
+  min: 0
+  max: 4294967295
+  unit: ""
+  group: mag_config
+  storage_class: ExportedGlobal
+  description: "imuSensor 随机流种子，保证确定性复现"
+  tunable_in_flight: false
+  safety_level: routine
+
+MAG_WMM_EPOCH:
+  rename_to: MAG_WMM_EPOCH
+  type: double
+  default: 2025.0
+  min: 2020.0
+  max: 2030.0
+  unit: ""
+  group: mag_reference
+  storage_class: ExportedGlobal
+  description: "WMM 十进制年份（wrldmagm decimalYear）"
+  tunable_in_flight: false
+  safety_level: routine
+
+MAG_CONST_BIAS:
+  rename_to: MAG_CONST_BIAS
+  type: single
+  default: [1.0, -0.5, 0.8]
+  min: [-100.0, -100.0, -100.0]
+  max: [100.0, 100.0, 100.0]
+  unit: "uT"
+  group: mag_error
+  storage_class: ExportedGlobal
+  description: "硬磁/常值偏置 [x,y,z]，映射 magparams.ConstantBias【暂定】"
+  tunable_in_flight: false
+  safety_level: routine
+
+MAG_AXES_MISALIGN:
+  rename_to: MAG_AXES_MISALIGN
+  type: single
+  default: [[100.0, 0.0, 0.0], [0.0, 100.0, 0.0], [0.0, 0.0, 100.0]]
+  min: null
+  max: null
+  unit: "%"
+  group: mag_error
+  storage_class: ExportedGlobal
+  description: "轴失准/软磁矩阵（%，100=单位阵），映射 magparams.AxesMisalignment【暂定】"
+  tunable_in_flight: false
+  safety_level: routine
+
+MAG_NOISE_DENSITY:
+  rename_to: MAG_NOISE_DENSITY
+  type: single
+  default: [0.2, 0.2, 0.2]
+  min: [0.0, 0.0, 0.0]
+  max: [20.0, 20.0, 20.0]
+  unit: "uT/sqrt(Hz)"
+  group: mag_noise
+  storage_class: ExportedGlobal
+  description: "白噪声密度 [x,y,z]，映射 magparams.NoiseDensity【暂定】"
+  tunable_in_flight: false
+  safety_level: routine
+
+MAG_BIAS_INSTABILITY:
+  rename_to: MAG_BIAS_INSTABILITY
+  type: single
+  default: [0.05, 0.05, 0.05]
+  min: [0.0, 0.0, 0.0]
+  max: [10.0, 10.0, 10.0]
+  unit: "uT"
+  group: mag_noise
+  storage_class: ExportedGlobal
+  description: "零偏不稳定性 [x,y,z]，映射 magparams.BiasInstability【暂定】"
+  tunable_in_flight: false
+  safety_level: routine
+
+MAG_RANDOM_WALK:
+  rename_to: MAG_RANDOM_WALK
+  type: single
+  default: [0.02, 0.02, 0.02]
+  min: [0.0, 0.0, 0.0]
+  max: [10.0, 10.0, 10.0]
+  unit: "uT*sqrt(Hz)"
+  group: mag_noise
+  storage_class: ExportedGlobal
+  description: "零偏随机游走 [x,y,z]，映射 magparams.RandomWalk【暂定】"
+  tunable_in_flight: false
+  safety_level: routine
+
+MAG_TEMP_BIAS:
+  rename_to: MAG_TEMP_BIAS
+  type: single
+  default: [0.0, 0.0, 0.0]
+  min: [-10.0, -10.0, -10.0]
+  max: [10.0, 10.0, 10.0]
+  unit: "uT/degC"
+  group: mag_temperature
+  storage_class: ExportedGlobal
+  description: "温度偏置系数，映射 magparams.TemperatureBias【暂定】"
+  tunable_in_flight: false
+  safety_level: routine
+
+MAG_TEMP_SCALE:
+  rename_to: MAG_TEMP_SCALE
+  type: single
+  default: [0.0, 0.0, 0.0]
+  min: [-10.0, -10.0, -10.0]
+  max: [10.0, 10.0, 10.0]
+  unit: "%/degC"
+  group: mag_temperature
+  storage_class: ExportedGlobal
+  description: "温度比例系数，映射 magparams.TemperatureScaleFactor【暂定】"
+  tunable_in_flight: false
+  safety_level: routine
+
+MAG_AMBIENT_TEMP:
+  rename_to: MAG_AMBIENT_TEMP
+  type: single
+  default: 25.0
+  min: -40.0
+  max: 85.0
+  unit: "degC"
+  group: mag_temperature
+  storage_class: ExportedGlobal
+  description: "环境温度输入（驱动温度误差项）【暂定】"
+  tunable_in_flight: false
+  safety_level: routine
+
+MAG_RANGE:
+  rename_to: MAG_RANGE
+  type: single
+  default: 1300.0
+  min: 100.0
+  max: 5000.0
+  unit: "uT"
+  group: mag_range
+  storage_class: ExportedGlobal
+  description: "磁力计量程上限（+/-），外壳饱和"
+  tunable_in_flight: false
+  safety_level: routine
+
+MAG_RESOLUTION:
+  rename_to: MAG_RESOLUTION
+  type: single
+  default: 0.0
+  min: 0.0
+  max: 10.0
+  unit: "uT"
+  group: mag_quantization
+  storage_class: ExportedGlobal
+  description: "LSB 量化步长（0 = 关闭），映射带通外的外壳量化【暂定】"
+  tunable_in_flight: false
+  safety_level: routine
+
