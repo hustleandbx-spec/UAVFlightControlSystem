@@ -19,26 +19,38 @@ classdef MagCore < matlab.System
 % 因此本类无法切到 Code generation，除非放弃官方 WMM 参考场。
 
     properties (Nontunable)
-        SampleRate        = 100              % Hz
-        AxesMisalignment  = 100*eye(3)       % %，100 = 单位阵
-        Seed              = 77101            % -
-        RefLat            = 0                % deg，本地 NED 原点纬度
-        RefLon            = 10               % deg，本地 NED 原点经度
-        WmmEpoch          = 2025             % 十进制年
-    end
-
-    properties
-        ConstantBias           = [0 0 0]     % uT
-        NoiseDensity           = [0 0 0]     % uT/sqrt(Hz)
-        BiasInstability        = [0 0 0]     % uT
-        RandomWalk             = [0 0 0]     % uT*sqrt(Hz)
-        TemperatureBias        = [0 0 0]     % uT/degC
-        TemperatureScaleFactor = [0 0 0]     % %/degC
-        Temperature            = 25          % degC
+        SampleRate             = 100            % Hz
+        Seed                   = 77101          % -
+        RefLat                 = 0              % deg，本地 NED 原点纬度
+        RefLon                 = 10             % deg，本地 NED 原点经度
+        WmmEpoch               = 2025           % 十进制年
+        ConstantBias           = [0 0 0]        % uT
+        AxesMisalignment       = 100*eye(3)     % %，100 = 单位阵
+        NoiseDensity           = [0 0 0]        % uT/sqrt(Hz)
+        BiasInstability        = [0 0 0]        % uT
+        RandomWalk             = [0 0 0]        % uT*sqrt(Hz)
+        TemperatureBias        = [0 0 0]        % uT/degC
+        TemperatureScaleFactor = [0 0 0]        % %/degC
+        Temperature            = 25             % degC
     end
 
     properties (Access = private)
         pIMU
+    end
+
+    methods
+        function obj = MagCore(varargin)
+            % Explicit constructor. This MATLAB install fails name-value
+            % construction of user System objects through the framework path
+            % (matlab.system.SystemInterface), so apply pairs after the base
+            % constructor instead.
+            obj@matlab.System();
+            if nargin > 0
+                for k = 1:2:numel(varargin)
+                    obj.(varargin{k}) = varargin{k+1};
+                end
+            end
+        end
     end
 
     methods (Access = protected)
@@ -80,8 +92,7 @@ classdef MagCore < matlab.System
             C_bn = double(quat2rotm(double(attitude_quat(:).')));   % body->NED
             C_nb = C_bn.';                                          % NED->body (imuSensor needs double)
 
-            obj.pIMU.MagneticField = double(m_n).';
-            obj.pIMU.Temperature   = double(obj.Temperature);
+            obj.pIMU.MagneticField = double(m_n).';   % 位置相关，逐点更新
             [~, mb] = obj.pIMU(zeros(1,3), zeros(1,3), C_nb);
 
             magBody  = single(mb(:));

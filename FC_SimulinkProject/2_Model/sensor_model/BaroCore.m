@@ -43,6 +43,21 @@ classdef BaroCore < matlab.System
         pHasLpf
     end
 
+    methods
+        function obj = BaroCore(varargin)
+            % Explicit constructor. This MATLAB install fails name-value
+            % construction of user System objects through the framework path
+            % (matlab.system.SystemInterface), so apply pairs after the base
+            % constructor instead.
+            obj@matlab.System();
+            if nargin > 0
+                for k = 1:2:numel(varargin)
+                    obj.(varargin{k}) = varargin{k+1};
+                end
+            end
+        end
+    end
+
     methods (Access = protected)
         function setupImpl(obj)
             obj.pAlt = altimeterSensor( ...
@@ -54,6 +69,12 @@ classdef BaroCore < matlab.System
                 'RandomStream',    'mt19937ar with seed', ...
                 'Seed',            double(obj.Seed));
             obj.pStream = RandStream('mt19937ar', 'Seed', double(obj.Seed) + 1);
+            obj.pLpf    = 0;
+            obj.pHasLpf = false;
+        end
+
+        function resetImpl(obj)
+            reset(obj.pAlt);
             obj.pLpf    = 0;
             obj.pHasLpf = false;
         end
