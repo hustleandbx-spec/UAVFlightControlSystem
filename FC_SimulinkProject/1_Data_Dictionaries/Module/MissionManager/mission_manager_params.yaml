@@ -1,0 +1,37 @@
+_meta:
+  dict_name: MissionManagerDict.sldd
+  dict_path: 2_Model/mission_manager
+  description: "MissionManager 私有任务执行与合同编译参数"
+  references:
+    - CommandContractDict.sldd
+    - MissionContractDict.sldd
+    - NavigationContractDict.sldd
+    - StateEstContractDict.sldd
+
+T_MM: {type: double, default: 0.02, min: 0.02, max: 0.02, unit: "s", group: scheduler, storage_class: ExportedGlobal, description: "MissionManager 显式中速离散周期，50 Hz；与位置/速度控制周期对齐", tunable_in_flight: false, safety_level: critical}
+
+MM_TAKEOFF_CRUISE_SPEED: {type: single, default: 2.0, min: 0.1, max: 20.0, unit: "m/s", group: takeoff_contract, storage_class: ExportedGlobal, description: "起飞合同巡航速度；复用退役 CMD_MISSION_CRUISE_SPEED 基线值", tunable_in_flight: false, safety_level: routine}
+MM_TAKEOFF_MAX_ACCELERATION: {type: single, default: 1.0, min: 0.1, max: 20.0, unit: "m/s^2", group: takeoff_contract, storage_class: ExportedGlobal, description: "起飞合同最大加速度；复用退役 CMD_MISSION_MAX_ACCELERATION 基线值", tunable_in_flight: false, safety_level: routine}
+MM_TAKEOFF_MAX_JERK: {type: single, default: 2.0, min: 0.1, max: 50.0, unit: "m/s^3", group: takeoff_contract, storage_class: ExportedGlobal, description: "起飞合同最大 jerk；复用退役 CMD_MISSION_MAX_JERK 基线值", tunable_in_flight: false, safety_level: routine}
+
+MM_WAYPOINT_MAX_ACCELERATION: {type: single, default: 1.0, min: 0.1, max: 20.0, unit: "m/s^2", group: waypoint_contract, storage_class: ExportedGlobal, description: "普通停点航段最大加速度；第一阶段暂定", tunable_in_flight: false, safety_level: routine}
+MM_WAYPOINT_MAX_JERK: {type: single, default: 2.0, min: 0.1, max: 50.0, unit: "m/s^3", group: waypoint_contract, storage_class: ExportedGlobal, description: "普通停点航段最大 jerk；第一阶段暂定", tunable_in_flight: false, safety_level: routine}
+
+MM_LANDING_CRUISE_SPEED: {type: single, default: 0.5, min: 0.1, max: 5.0, unit: "m/s", group: landing_contract, storage_class: ExportedGlobal, description: "标称原地降落合同下降速度；第一阶段暂定", tunable_in_flight: false, safety_level: critical}
+MM_LANDING_MAX_ACCELERATION: {type: single, default: 0.5, min: 0.1, max: 10.0, unit: "m/s^2", group: landing_contract, storage_class: ExportedGlobal, description: "标称原地降落合同最大加速度；第一阶段暂定", tunable_in_flight: false, safety_level: critical}
+MM_LANDING_MAX_JERK: {type: single, default: 1.0, min: 0.1, max: 20.0, unit: "m/s^3", group: landing_contract, storage_class: ExportedGlobal, description: "标称原地降落合同最大 jerk；第一阶段暂定", tunable_in_flight: false, safety_level: critical}
+
+MM_ARRIVE_HORIZONTAL_TOLERANCE: {type: single, default: 0.5, min: 0.0, max: 20.0, unit: "m", group: arrival_predicate, storage_class: ExportedGlobal, description: "停点水平位置误差门限；来自 DES-MM-004 暂定值", tunable_in_flight: false, safety_level: routine}
+MM_ARRIVE_VERTICAL_TOLERANCE: {type: single, default: 0.3, min: 0.0, max: 20.0, unit: "m", group: arrival_predicate, storage_class: ExportedGlobal, description: "停点 NED 高度误差门限；来自 DES-MM-004 暂定值", tunable_in_flight: false, safety_level: routine}
+MM_ARRIVE_SPEED_TOLERANCE: {type: single, default: 0.3, min: 0.0, max: 20.0, unit: "m/s", group: arrival_predicate, storage_class: ExportedGlobal, description: "停点三维速度门限；来自 DES-MM-004 暂定值", tunable_in_flight: false, safety_level: routine}
+MM_ARRIVE_YAW_TOLERANCE: {type: single, default: 0.034906585, min: 0.0, max: 3.1415927, unit: "rad", group: arrival_predicate, storage_class: ExportedGlobal, description: "停点偏航误差门限 2 deg；来自 DES-MM-004 暂定值", tunable_in_flight: false, safety_level: routine}
+MM_ARRIVE_CONFIRM_COUNT: {type: uint16, default: 25, min: 1, max: 1000, unit: "count", group: arrival_predicate, storage_class: ExportedGlobal, description: "停点连续满足确认周期数；25 x T_MM = 0.5 s，第一阶段暂定", tunable_in_flight: false, safety_level: critical}
+
+MM_LAND_HEIGHT_TOLERANCE: {type: single, default: 0.3, min: 0.0, max: 5.0, unit: "m", group: landing_predicate, storage_class: ExportedGlobal, description: "标称降落地面高度误差门限；平坦地面 Dground=0，第一阶段暂定", tunable_in_flight: false, safety_level: critical}
+MM_LAND_VERTICAL_SPEED_TOLERANCE: {type: single, default: 0.2, min: 0.0, max: 5.0, unit: "m/s", group: landing_predicate, storage_class: ExportedGlobal, description: "标称降落垂向速度门限；第一阶段暂定", tunable_in_flight: false, safety_level: critical}
+MM_LAND_HORIZONTAL_SPEED_TOLERANCE: {type: single, default: 0.2, min: 0.0, max: 5.0, unit: "m/s", group: landing_predicate, storage_class: ExportedGlobal, description: "标称降落水平速度门限；第一阶段暂定", tunable_in_flight: false, safety_level: critical}
+MM_LAND_ANGULAR_RATE_TOLERANCE: {type: single, default: 0.08726646, min: 0.0, max: 3.1415927, unit: "rad/s", group: landing_predicate, storage_class: ExportedGlobal, description: "标称降落机体角速度模门限 5 deg/s；第一阶段暂定", tunable_in_flight: false, safety_level: critical}
+MM_LAND_CONFIRM_COUNT: {type: uint16, default: 25, min: 1, max: 1000, unit: "count", group: landing_predicate, storage_class: ExportedGlobal, description: "标称降落连续满足确认周期数；25 x T_MM = 0.5 s，第一阶段暂定", tunable_in_flight: false, safety_level: critical}
+
+MM_DEFAULT_CRUISE_SPEED: {type: single, default: 1.0, min: 0.1, max: 20.0, unit: "m/s", group: mission, storage_class: ExportedGlobal, description: "Basic Mission cruise speed", tunable_in_flight: false, safety_level: routine}
+MM_RTL_HEIGHT: {type: single, default: 10.0, min: 1.0, max: 120.0, unit: "m", group: mission, storage_class: ExportedGlobal, description: "Simulation RTL altitude above first-fix Home", tunable_in_flight: false, safety_level: routine}

@@ -1,0 +1,88 @@
+# =============================================================================
+# 飞行器总体参数 — VehicleDict.sldd 的 YAML 源定义
+# =============================================================================
+# 本文件是 VehicleDict.sldd 的唯一事实源。
+# 修改参数后运行 build_all() 重新生成字典。
+#
+# 平台假设: DJI Matrice 400 (M400) 量级, 来源 docs/technical/01_baselines/Vehicle_Definition.md
+# 全部数值为 Assumption 层【暂定】值, MTOW 15.8 kg 构型。
+# =============================================================================
+
+_meta:
+  dict_name: VehicleDict.sldd
+  dict_path: 1_Data_Dictionaries/Platform/Airframe
+  description: "飞行器总体参数（质量、惯量、几何、构型）"
+  references: []
+    # VehicleDict 是根字典，不引用其他字典
+
+# =============================================================================
+# 质量与惯量
+# =============================================================================
+
+mass:
+  type: single
+  default: 15.8
+  min: 9.8
+  max: 15.8
+  unit: "kg"
+  group: vehicle_mass_inertia
+  storage_class: ExportedGlobal
+  description: "MTOW 构型总质量（含电池、6kg 载荷）。空重 9.8kg。来源: Vehicle_Definition.md §2 (M400 官方 MTOW)"
+
+inertia:
+  type: single
+  default: [0.6, 0.6, 0.7]
+  min: [0.3, 0.3, 0.35]
+  max: [1.0, 1.0, 1.2]
+  unit: "kg·m²"
+  group: vehicle_mass_inertia
+  storage_class: ExportedGlobal
+  description: "MTOW 15.8kg 构型转动惯量 [Ixx, Iyy, Izz]。来源: Vehicle_Definition.md §2, 简化模型估算（中心体 14.6kg 均匀半径 0.25m + 4×0.3kg 电机 @L=0.45m）, ±30% 量级"
+
+g:
+  type: single
+  default: 9.80665
+  min: null
+  max: null
+  unit: "m/s²"
+  group: physical_constants
+  storage_class: ExportedGlobal
+  description: "重力加速度。物理常量，不应作为调参项暴露"
+
+# =============================================================================
+# 几何参数
+# =============================================================================
+
+motorArmLength_m:
+  type: single
+  default: 0.45
+  min: 0.2
+  max: 0.6
+  unit: "m"
+  group: vehicle_geometry
+  storage_class: ExportedGlobal
+  description: "电机到重心的水平距离（臂长）。对角轴距 0.9m。来源: Vehicle_Definition.md §2 (参考 M350 RTK 895mm)"
+
+rotor_count:
+  type: uint8
+  default: 4
+  min: 4
+  max: 8
+  unit: ""
+  group: vehicle_geometry
+  storage_class: ExportedGlobal
+  description: "旋翼数量。当前为 X 型四旋翼"
+
+# =============================================================================
+# 构型参数
+# =============================================================================
+
+rotor_config:
+  type: string
+  default: "X"
+  min: null
+  max: null
+  unit: ""
+  group: vehicle_geometry
+  storage_class: ExportedGlobal
+  description: "旋翼布局类型: X (X型), Cross (十字型), Hex_X (X型六旋翼), Hex_Plus (+型六旋翼), Octo_X (X型八旋翼)"

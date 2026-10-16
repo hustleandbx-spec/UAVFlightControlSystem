@@ -1,0 +1,16 @@
+_meta:
+  dict_name: NavigatorDict.sldd
+  dict_path: 2_Model/navigator
+  description: "Navigator nominal stop-segment planning parameters (DD-NAV-001)."
+
+NAV_TIME_BISECTION_ITERATIONS:
+  type: uint32
+  default: 24
+  storage_class: Auto
+  description: "Fixed duration bisection count specified by Navigator detailed design section 3.3."
+
+NAV_ROOT_IMAG_TOL:
+  type: double
+  default: 1.0e-9
+  storage_class: Auto
+  description: "Imaginary roundoff tolerance for stationary roots on normalized segment time [0,1]."

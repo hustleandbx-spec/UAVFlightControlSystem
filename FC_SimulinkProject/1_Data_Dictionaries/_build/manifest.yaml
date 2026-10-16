@@ -1,0 +1,162 @@
+# =============================================================================
+# FC_SimulinkProject 数据字典构建清单
+# =============================================================================
+# 本文件是所有 .sldd 字典的唯一构建描述。
+# 运行 build_all.m 后，按本清单顺序生成/更新所有字典。
+#
+# 四层语义：
+#   Interface  - 跨模块 Bus 契约 + 共享枚举（大家约定的接口）
+#   Platform   - 飞行器平台物理参数（机体、动力）
+#   Module     - 各功能模块私有参数（含空壳依赖字典）
+#   Simulation - 仿真环境配置（初值、噪声开关、停止时间）
+# =============================================================================
+
+_meta:
+  data_root: ".."                  # 相对 _build/ 的 1_Data_Dictionaries 根
+  tool_dir: "../../5_Tool"         # readParamsFromYaml / addBusFromCell 等工具
+
+# =============================================================================
+# Interface 层：7 个域的 Bus 契约字典（叶子字典，不引用其他字典）
+# =============================================================================
+interface:
+  - domain: Command
+    bus_config_dir: "Interface/Command"
+    output: "Interface/Command/CommandContractDict.sldd"
+    values_yaml: "Interface/Command/contract_values.yaml"
+
+  - domain: Mission
+    bus_config_dir: "Interface/Mission"
+    output: "Interface/Mission/MissionContractDict.sldd"
+    values_yaml: null
+
+  - domain: Navigation
+    bus_config_dir: "Interface/Navigation"
+    output: "Interface/Navigation/NavigationContractDict.sldd"
+    values_yaml: null
+
+  - domain: StateEst
+    bus_config_dir: "Interface/StateEst"
+    output: "Interface/StateEst/StateEstContractDict.sldd"
+    values_yaml: null
+
+  - domain: Control
+    bus_config_dir: "Interface/Control"
+    output: "Interface/Control/ControlContractDict.sldd"
+    values_yaml: null
+
+  - domain: Gateway
+    bus_config_dir: "Interface/Gateway"
+    output: "Interface/Gateway/GatewayContractDict.sldd"
+    values_yaml: null
+
+  - domain: Simulation
+    bus_config_dir: "Interface/Simulation"
+    output: "Interface/Simulation/SimulationContractDict.sldd"
+    values_yaml: null
+
+# =============================================================================
+# Platform 层：飞行器平台物理参数（根字典，不引用其他字典）
+# =============================================================================
+platform:
+  - name: Airframe
+    yaml: "Platform/Airframe/vehicle_params.yaml"
+    output: "Platform/Airframe/VehicleDict.sldd"
+    depends_on: []
+
+  - name: Propulsion
+    yaml: "Platform/Propulsion/actuator_params.yaml"
+    output: "Platform/Propulsion/ActuatorConfigDict.sldd"
+    depends_on: []
+
+# =============================================================================
+# Module 层：各功能模块私有字典
+#   yaml 为 null 表示空壳字典（只挂依赖，无私有参数）
+#   hook 字段指定 build_all.m 里的特殊后处理函数
+# =============================================================================
+module:
+  - name: StateEstimation
+    yaml: "Module/StateEstimation/state_estimation_params.yaml"
+    output: "Module/StateEstimation/StateEstDict.sldd"
+    depends_on: ["StateEstContractDict.sldd"]
+    hook: null
+
+  - name: FlightControl
+    yaml: "Module/FlightControl/flight_control_params.yaml"
+    output: "Module/FlightControl/FlightControlDict.sldd"
+    depends_on: ["StateEstContractDict.sldd", "ControlContractDict.sldd",
+                 "VehicleDict.sldd", "ActuatorConfigDict.sldd"]
+    hook: null
+
+  - name: Navigator
+    yaml: "Module/Navigator/navigator_params.yaml"
+    output: "Module/Navigator/NavigatorDict.sldd"
+    depends_on: ["NavigationContractDict.sldd", "StateEstContractDict.sldd",
+                 "ControlContractDict.sldd"]
+    hook: "derive_nav_sample_time"
+
+  - name: MissionManager
+    yaml: "Module/MissionManager/mission_manager_params.yaml"
+    output: "Module/MissionManager/MissionManagerDict.sldd"
+    depends_on: ["CommandContractDict.sldd", "MissionContractDict.sldd",
+                 "NavigationContractDict.sldd", "StateEstContractDict.sldd"]
+    hook: "mission_manager_empty_buses"
+
+  - name: Commander
+    yaml: null
+    output: "Module/Commander/CommanderDict.sldd"
+    depends_on: ["CommandContractDict.sldd", "MissionContractDict.sldd",
+                 "NavigationContractDict.sldd", "StateEstContractDict.sldd",
+                 "ControlContractDict.sldd", "GatewayContractDict.sldd"]
+    hook: null
+
+  - name: SensorModel
+    yaml: "Module/SensorModel/sensor_params.yaml"
+    output: "Module/SensorModel/SensorDict.sldd"
+    depends_on: ["StateEstContractDict.sldd", "SimulationContractDict.sldd"]
+    hook: null
+
+  - name: DynamicModel
+    yaml: null
+    output: "Module/DynamicModel/DynamicModelDict.sldd"
+    depends_on: ["SimulationContractDict.sldd", "VehicleDict.sldd",
+                 "ActuatorConfigDict.sldd"]
+    hook: null
+
+  - name: PowerSystem
+    yaml: null
+    output: "Module/PowerSystem/PowerSystemDict.sldd"
+    depends_on: ["ControlContractDict.sldd", "SimulationContractDict.sldd",
+                 "VehicleDict.sldd", "ActuatorConfigDict.sldd"]
+    hook: null
+
+  - name: Gateway
+    yaml: "Module/Gateway/gateway_params.yaml"
+    output: "Module/Gateway/GatewayDict.sldd"
+    depends_on: ["CommandContractDict.sldd", "MissionContractDict.sldd",
+                 "StateEstContractDict.sldd", "ControlContractDict.sldd",
+                 "GatewayContractDict.sldd"]
+    hook: "gateway_ground_values"
+
+  - name: FlightCore
+    yaml: null
+    output: "Module/Integration/FlightCoreDict.sldd"
+    depends_on: ["CommandContractDict.sldd", "MissionContractDict.sldd",
+                 "NavigationContractDict.sldd", "StateEstContractDict.sldd",
+                 "ControlContractDict.sldd", "GatewayContractDict.sldd"]
+    hook: null
+
+  - name: MinimalMIL
+    yaml: null
+    output: "Module/Integration/MinimalMILDict.sldd"
+    depends_on: ["ControlContractDict.sldd", "StateEstContractDict.sldd",
+                 "SimulationContractDict.sldd"]
+    hook: null
+
+# =============================================================================
+# Simulation 层：仿真环境配置
+# =============================================================================
+simulation:
+  - name: Config
+    yaml: "Simulation/Config/simulation_params.yaml"
+    output: "Simulation/Config/SimulationDict.sldd"
+    depends_on: ["SimulationContractDict.sldd"]

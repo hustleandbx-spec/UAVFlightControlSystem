@@ -1,0 +1,58 @@
+# =============================================================================
+# 执行机构共享配置 — ActuatorConfigDict.sldd 的 YAML 源定义
+# =============================================================================
+# 本文件是 ActuatorConfigDict.sldd 的唯一事实源。
+# 修改参数后运行 build_all() 重新生成字典。
+#
+# 平台假设: DJI Matrice 400 (M400) 量级, 来源 docs/technical/01_baselines/Vehicle_Definition.md
+# 动力模型: 油门 → 稳态转速 → 推力/扭矩 → 电机指令 → 总推力/力矩
+# =============================================================================
+
+_meta:
+  dict_name: ActuatorConfigDict.sldd
+  dict_path: 1_Data_Dictionaries/Platform/Propulsion
+  description: "动力系统参数（单电机最大推力、反扭矩、时间常数）"
+  references: []
+
+# =============================================================================
+# 电机/电调参数 (M400 量级)
+# =============================================================================
+
+motorMaxThrust_N:
+  rename_to: PS_MOTOR_MAX_THRUST_N
+  type: single
+  default: 77.5
+  min: 30.0
+  max: 150.0
+  unit: "N"
+  group: propulsion
+  storage_class: ExportedGlobal
+  description: "单电机最大推力。按 MTOW 15.8kg × T/W=2.0 / 4 电机 = 77.5N 推导。T/W 区间 1.8~2.5。normalized command 1.0 线性对应此推力"
+  tunable_in_flight: false
+  safety_level: critical
+
+motorMaxReactionTorque_Nm:
+  rename_to: PS_MOTOR_MAX_REACTION_TORQUE_NM
+  type: single
+  default: 1.03
+  min: 0.2
+  max: 3.0
+  unit: "N*m"
+  group: propulsion
+  storage_class: ExportedGlobal
+  description: "单电机最大反扭矩。按悬停推力反扭矩比例估算（旧 F450 比例 0.0133 N·m/N × 77.5N）。待厂商数据校准"
+  tunable_in_flight: false
+  safety_level: critical
+
+motorTimeConstant_s:
+  rename_to: PS_MOTOR_TIME_CONSTANT_S
+  type: single
+  default: 0.02
+  min: 0.01
+  max: 0.03
+  unit: "s"
+  group: propulsion
+  storage_class: ExportedGlobal
+  description: "电机一阶低通时间常数。区间 10~30ms 取中值 20ms。来源: Vehicle_Definition.md §2 (工业级无刷电机+电调典型值)"
+  tunable_in_flight: false
+  safety_level: critical

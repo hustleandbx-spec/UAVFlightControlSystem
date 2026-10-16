@@ -1,0 +1,28 @@
+_meta:
+  dict_name: GatewayDict.sldd
+  dict_path: 2_Model/Gateway
+  description: "Gateway MAVLink 2 身份、事务、FTP、链路与遥测配置"
+  references:
+    - CommandContractDict.sldd
+    - MissionContractDict.sldd
+    - StateEstContractDict.sldd
+    - ControlContractDict.sldd
+    - GatewayContractDict.sldd
+
+GatewaySystemId: {type: uint8, default: 1, min: 1, max: 255, unit: "", group: identity, storage_class: ExportedGlobal, description: "FlightCore MAVLink SystemId", tunable_in_flight: false, safety_level: routine}
+GatewayComponentId: {type: uint8, default: 1, min: 1, max: 255, unit: "", group: identity, storage_class: ExportedGlobal, description: "FlightCore MAVLink ComponentId", tunable_in_flight: false, safety_level: routine}
+AuthorizedGcsSystemId: {type: uint8, default: 255, min: 1, max: 255, unit: "", group: identity, storage_class: ExportedGlobal, description: "唯一授权 GCS SystemId", tunable_in_flight: false, safety_level: routine}
+AuthorizedGcsComponentId: {type: uint8, default: 190, min: 1, max: 255, unit: "", group: identity, storage_class: ExportedGlobal, description: "唯一授权 GCS ComponentId", tunable_in_flight: false, safety_level: routine}
+GcsLinkTimeoutSec: {type: double, default: 3.0, min: 0.1, max: 30.0, unit: "s", group: link, storage_class: ExportedGlobal, description: "Accepted Rx Evidence 超时", tunable_in_flight: false, safety_level: routine}
+HeartbeatPeriodSec: {type: double, default: 1.0, min: 0.01, max: 10.0, unit: "s", group: telemetry, storage_class: ExportedGlobal, description: "HEARTBEAT 周期", tunable_in_flight: false, safety_level: routine}
+AttitudePeriodSec: {type: double, default: 0.05, min: 0.01, max: 10.0, unit: "s", group: telemetry, storage_class: ExportedGlobal, description: "ATTITUDE_QUATERNION 周期", tunable_in_flight: false, safety_level: routine}
+LocalPositionPeriodSec: {type: double, default: 0.1, min: 0.01, max: 10.0, unit: "s", group: telemetry, storage_class: ExportedGlobal, description: "LOCAL_POSITION_NED 周期", tunable_in_flight: false, safety_level: routine}
+GlobalPositionPeriodSec: {type: double, default: 0.2, min: 0.01, max: 10.0, unit: "s", group: telemetry, storage_class: ExportedGlobal, description: "GLOBAL_POSITION_INT 周期", tunable_in_flight: false, safety_level: routine}
+PositionTargetPeriodSec: {type: double, default: 0.2, min: 0.01, max: 10.0, unit: "s", group: telemetry, storage_class: ExportedGlobal, description: "POSITION_TARGET_LOCAL_NED 周期", tunable_in_flight: false, safety_level: routine}
+ActuatorOutputPeriodSec: {type: double, default: 0.2, min: 0.01, max: 10.0, unit: "s", group: telemetry, storage_class: ExportedGlobal, description: "ACTUATOR_OUTPUT_STATUS 周期", tunable_in_flight: false, safety_level: routine}
+SysStatusPeriodSec: {type: double, default: 1.0, min: 0.01, max: 10.0, unit: "s", group: telemetry, storage_class: ExportedGlobal, description: "SYS_STATUS 周期", tunable_in_flight: false, safety_level: routine}
+VfrHudPeriodSec: {type: double, default: 0.2, min: 0.01, max: 10.0, unit: "s", group: telemetry, storage_class: ExportedGlobal, description: "VFR_HUD 周期", tunable_in_flight: false, safety_level: routine}
+GpsRawPeriodSec: {type: double, default: 0.2, min: 0.01, max: 10.0, unit: "s", group: telemetry, storage_class: ExportedGlobal, description: "GPS_RAW_INT 周期", tunable_in_flight: false, safety_level: routine}
+MissionMaxItems: {type: uint16, default: 400, min: 3, max: 400, unit: "", group: mission, storage_class: ExportedGlobal, description: "Standard mission item capacity", tunable_in_flight: false, safety_level: routine}
+MissionStatusPeriodSec: {type: double, default: 0.2, min: 0.02, max: 1.0, unit: "s", group: telemetry, storage_class: ExportedGlobal, description: "Mission status telemetry period", tunable_in_flight: false, safety_level: routine}
+MissionServicePeriodSec: {type: double, default: 0.02, min: 0.02, max: 0.1, unit: "s", group: mission, storage_class: ExportedGlobal, description: "MM acceptance and progress projection service period", tunable_in_flight: false, safety_level: routine}

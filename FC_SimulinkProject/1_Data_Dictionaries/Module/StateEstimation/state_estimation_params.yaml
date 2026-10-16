@@ -1,0 +1,566 @@
+# =============================================================================
+# 状态估计参数 — StateEstDict.sldd 的 YAML 源定义
+# =============================================================================
+# 本文件是 StateEstDict.sldd 的唯一事实来源。
+# 修改参数后运行 create_StateEstDict() 重新生成字典。
+#
+# 三种滤波器共享此字典: ESKF（误差状态）/ EKF（扩展）/ UKF（无迹）
+# 后续将按 SE_ 前缀统一重命名，当前键名保持与模型块一致。
+# =============================================================================
+
+_meta:
+  dict_name: StateEstDict.sldd
+  dict_path: 2_Model/state_estimation
+  description: "状态估计器参数（重力矢量、IMU噪声、GPS噪声、初始协方差、UKF参数）"
+  references:
+    - StateEstContractDict.sldd
+
+# =============================================================================
+# 通用参数
+# =============================================================================
+
+g_n:
+  rename_to: SE_GRAVITY
+  type: single
+  default: [0.0, 0.0, 9.81]
+  min: null
+  max: null
+  unit: "m/s²"
+  group: general
+  storage_class: ExportedGlobal
+  description: "NED 重力加速度矢量 [g_N, g_E, g_D]。物理常量，不作调参项"
+  tunable_in_flight: false
+  safety_level: routine
+
+imu_sample_time:
+  rename_to: SE_IMU_SAMPLE_TIME
+  type: double
+  default: 0.001
+  min: 0.0001
+  max: 0.02
+  unit: "s"
+  group: general
+  storage_class: ExportedGlobal
+  description: "IMU 调度/采样周期。用于 SampleTime、Rate Transition 和时间戳语义，默认 0.001s = 1000Hz"
+  tunable_in_flight: false
+  safety_level: critical
+
+ekf_predict_dt:
+  rename_to: SE_EKF_PREDICT_DT
+  type: single
+  default: 0.001
+  min: 0.0001
+  max: 0.02
+  unit: "s"
+  group: general
+  storage_class: ExportedGlobal
+  description: "EKF 预测步长数值输入。显式匹配 EKF MATLAB Function 的 single 数值契约"
+  tunable_in_flight: false
+  safety_level: critical
+
+# =============================================================================
+# IMU 噪声 — 功率谱密度 (PSD)
+# =============================================================================
+# 连续时间噪声模型: Q_c = diag(σa²·I₃, σg²·I₃, σba²·I₃, σbg²·I₃)
+# 离散化: Q_d = G · Q_c · G' · Δt
+# PSD 单位: 物理量²/Hz
+
+sigma_acc:
+  rename_to: SE_ACC_NOISE
+  type: single
+  default: 0.1
+  min: 1.0e-6
+  max: 0.1
+  unit: "m²/s⁴/Hz"
+  group: imu_noise
+  storage_class: ExportedGlobal
+  description: "加速度计白噪声 PSD。增大→降低加速度计在融合中的权重"
+  tunable_in_flight: false
+  safety_level: critical
+
+sigma_gyr:
+  rename_to: SE_GYR_NOISE
+  type: single
+  default: 0.0001
+  min: 1.0e-8
+  max: 0.01
+  unit: "rad²/s²/Hz"
+  group: imu_noise
+  storage_class: ExportedGlobal
+  description: "陀螺仪白噪声 PSD。增大→降低陀螺仪在融合中的权重"
+  tunable_in_flight: false
+  safety_level: critical
+
+sigma_ba:
+  rename_to: SE_ACC_BIAS_WALK
+  type: single
+  default: 0.000001
+  min: 1.0e-10
+  max: 0.001
+  unit: "m²/s⁶/Hz"
+  group: imu_noise
+  storage_class: ExportedGlobal
+  description: "加速度计偏置随机游走 PSD。增大→允许偏置估计更快变化但噪声更大"
+  tunable_in_flight: false
+  safety_level: critical
+
+sigma_bg:
+  rename_to: SE_GYR_BIAS_WALK
+  type: single
+  default: 0.0000001
+  min: 1.0e-12
+  max: 0.0001
+  unit: "rad²/s⁴/Hz"
+  group: imu_noise
+  storage_class: ExportedGlobal
+  description: "陀螺仪偏置随机游走 PSD。增大→允许偏置估计更快变化但噪声更大"
+  tunable_in_flight: false
+  safety_level: critical
+
+# =============================================================================
+# GPS 观测噪声标准差 (1σ)
+# =============================================================================
+
+R_pos:
+  rename_to: SE_GPS_POS_NOISE
+  type: single
+  default: 1.0
+  min: 0.01
+  max: 5.0
+  unit: "m^2"
+  group: gps_noise
+  storage_class: ExportedGlobal
+  description: "GPS 位置观测噪声方差（EKF 中直接作为 R 对角元使用）。取 GPS_POS_V_NOISE=1.0 m(1σ) 的平方，覆盖垂直最差轴；0.2 会把垂直观测权重放大 5 倍。增大→降低 GPS 位置在修正中的权重"
+  tunable_in_flight: false
+  safety_level: routine
+
+R_vel:
+  rename_to: SE_GPS_VEL_NOISE
+  type: single
+  default: 0.02
+  min: 0.01
+  max: 2.0
+  unit: "(m/s)^2"
+  group: gps_noise
+  storage_class: ExportedGlobal
+  description: "GPS 速度观测噪声方差（EKF 中直接作为 R 对角元使用）。GPS_VEL_NOISE=0.1 m/s(1σ) 的平方为 0.01；0.02 兼顾垂直通道实测 0.45 m/s 的偏大噪声。增大→降低 GPS 速度在修正中的权重"
+  tunable_in_flight: false
+  safety_level: routine
+
+# =============================================================================
+# 初始协方差 — 影响滤波器启动阶段的收敛速度
+# =============================================================================
+
+SE_EKF_INIT_STATE:
+  type: single
+  default: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+  unit: ""
+  group: initial_condition
+  storage_class: ExportedGlobal
+  description: "EKF 16维默认名义状态 [Position_NED; Velocity_NED; Attitude_quat_wxyz; AccelBias; GyroBias]。位置以启动点为局部 NED 原点。"
+
+SE_EKF_INIT_COV_DIAG:
+  type: single
+  default: [0.25, 0.25, 0.25, 0.04, 0.04, 0.04, 0.01, 0.01, 0.01, 0.0025, 0.0025, 0.0025, 0.0001, 0.0001, 0.0001]
+  unit: ""
+  group: initial_condition
+  storage_class: ExportedGlobal
+  description: "EKF 15维误差状态初始协方差对角线 [Position; Velocity; Attitude; AccelBias; GyroBias]。"
+
+P0_pos:
+  rename_to: SE_P0_POS
+  type: single
+  default: 1.0
+  min: 0.01
+  max: 100.0
+  unit: "m²"
+  group: initial_covariance
+  storage_class: ExportedGlobal
+  description: "初始位置协方差。有GPS时可设小值(0.1)，无GPS时设大值(10)"
+  tunable_in_flight: false
+  safety_level: routine
+
+P0_vel:
+  rename_to: SE_P0_VEL
+  type: single
+  default: 1.0
+  min: 0.01
+  max: 100.0
+  unit: "m²/s²"
+  group: initial_covariance
+  storage_class: ExportedGlobal
+  description: "初始速度协方差。静止启动时设小值"
+  tunable_in_flight: false
+  safety_level: routine
+
+P0_att:
+  rename_to: SE_P0_ATT
+  type: single
+  default: 0.1
+  min: 0.001
+  max: 1.0
+  unit: "rad²"
+  group: initial_covariance
+  storage_class: ExportedGlobal
+  description: "初始姿态协方差。静止水平放置时可为极小值(1e-4)"
+  tunable_in_flight: false
+  safety_level: routine
+
+P0_ba:
+  rename_to: SE_P0_ACC_BIAS
+  type: single
+  default: 0.01
+  min: 0.0001
+  max: 1.0
+  unit: "m²/s⁴"
+  group: initial_covariance
+  storage_class: ExportedGlobal
+  description: "初始加速度计偏置协方差"
+  tunable_in_flight: false
+  safety_level: routine
+
+P0_bg:
+  rename_to: SE_P0_GYR_BIAS
+  type: single
+  default: 0.01
+  min: 0.0001
+  max: 1.0
+  unit: "rad²/s²"
+  group: initial_covariance
+  storage_class: ExportedGlobal
+  description: "初始陀螺仪偏置协方差"
+  tunable_in_flight: false
+  safety_level: routine
+
+# =============================================================================
+# UKF 参数 — 仅 UKF 使用
+# =============================================================================
+# 无迹变换: n=15, λ=α²(n+κ)-n
+# Sigma 点权重: Wm⁰=λ/(n+λ), Wc⁰=Wm⁰+(1-α²+β), Wmⁱ=Wcⁱ=1/(2(n+λ))
+
+ukf_alpha:
+  rename_to: SE_UKF_ALPHA
+  type: single
+  default: 1.0
+  min: 0.001
+  max: 1.0
+  unit: ""
+  group: ukf
+  storage_class: ExportedGlobal
+  description: "UKF Sigma 点散布参数。α=1时Sigma点恰好覆盖±1σ椭球。15维建议α=1"
+  tunable_in_flight: false
+  safety_level: routine
+
+ukf_beta:
+  rename_to: SE_UKF_BETA
+  type: single
+  default: 2.0
+  min: 0.0
+  max: 4.0
+  unit: ""
+  group: ukf
+  storage_class: ExportedGlobal
+  description: "UKF 先验分布参数。高斯分布=2。修正协方差权重峰度"
+  tunable_in_flight: false
+  safety_level: routine
+
+ukf_kappa:
+  rename_to: SE_UKF_KAPPA
+  type: single
+  default: 0.0
+  min: -3.0
+  max: 5.0
+  unit: ""
+  group: ukf
+  storage_class: ExportedGlobal
+  description: "UKF 次级缩放参数。κ=0默认；κ=3-n使λ>0保证正定性"
+  tunable_in_flight: false
+  safety_level: routine
+
+# =============================================================================
+# INS_EKF（insEKF 四传感器）参数 — 仅 INS_EKF.slx 使用
+# =============================================================================
+# 状态向量布局（由 insEKF(insAccelerometer, insGyroscope, insGPS, insMagnetometer)
+# 的 stateinfo 决定，本机 R2025b 实测 28 维）：
+#   1:4   Orientation            四元数 body->NED [w x y z]
+#   5:7   AngularVelocity        机体角速度          rad/s
+#   8:10  Position               NED 位置            m
+#   11:13 Velocity               NED 速度            m/s
+#   14:16 Acceleration           加速度状态          m/s^2
+#   17:19 GeomagneticVector      NED 地磁矢量        uT
+#   20:22 Accelerometer_Bias     加计零偏            m/s^2
+#   23:25 Gyroscope_Bias         陀螺零偏            rad/s
+#   26:28 Magnetometer_Bias      磁零偏              uT
+# 量纲跨 8 个数量级，P0/Q 必须逐状态分块给，禁止用单位阵。
+
+SE_EKF_X0:
+  type: single
+  default: [1,0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0]
+  unit: ""
+  group: ins_ekf
+  storage_class: ExportedGlobal
+  description: "insEKF 28 维初始名义状态。姿态为单位四元数；位置以启动点为局部 NED 原点，由 GPSPreprocess 首帧锁存原点后另行对齐。"
+  tunable_in_flight: false
+  safety_level: critical
+
+SE_EKF_P0_DIAG:
+  type: single
+  default: [1e-4,1e-4,1e-4,1e-4, 1e-4,1e-4,1e-4, 1.0,1.0,1.0, 0.1,0.1,0.1, 1e-2,1e-2,1e-2, 1e2,1e2,1e2, 1e-4,1e-4,1e-4, 1e-6,1e-6,1e-6, 1e-4,1e-4,1e-4]
+  unit: ""
+  group: ins_ekf
+  storage_class: ExportedGlobal
+  description: "insEKF 28 维初始协方差对角元，顺序同 SE_EKF_X0。必须逐状态分块：姿态/角速率 rad²、位置 m²、速度 (m/s)²、地磁 uT²、零偏各自量纲。"
+  tunable_in_flight: false
+  safety_level: critical
+
+SE_EKF_Q_DIAG:
+  type: single
+  default: [1e-10,1e-10,1e-10,1e-10, 1e-8,1e-8,1e-8, 1e-10,1e-10,1e-10, 1e-4,1e-4,1e-4, 1e-4,1e-4,1e-4, 1e-8,1e-8,1e-8, 1e-8,1e-8,1e-8, 1e-10,1e-10,1e-10, 1e-8,1e-8,1e-8]
+  unit: ""
+  group: ins_ekf
+  storage_class: ExportedGlobal
+  description: "insEKF 连续时间加性过程噪声对角元（AdditiveProcessNoise），顺序同 SE_EKF_X0。量纲为各状态量纲平方/Hz。" 
+  tunable_in_flight: false
+  safety_level: critical
+
+SE_EKF_R_GYRO:
+  type: single
+  default: 1.0e-6
+  unit: "(rad/s)^2"
+  group: ins_ekf
+  storage_class: ExportedGlobal
+  description: "陀螺仪测量噪声方差（insGyroscope 的 fuse R 对角元）"
+  tunable_in_flight: false
+  safety_level: critical
+
+SE_EKF_R_ACCEL:
+  type: single
+  default: 1.0e-4
+  unit: "(m/s^2)^2"
+  group: ins_ekf
+  storage_class: ExportedGlobal
+  description: "加速度计测量噪声方差（insAccelerometer 的 fuse R 对角元）"
+  tunable_in_flight: false
+  safety_level: critical
+
+SE_EKF_R_MAG:
+  type: single
+  default: 1.0e-2
+  unit: "uT^2"
+  group: ins_ekf
+  storage_class: ExportedGlobal
+  description: "磁强计测量噪声方差（insMagnetometer 的 fuse R 对角元；INS_EKF_PX4 15 态 EKF 磁力计融合亦用此值）"
+  tunable_in_flight: false
+  safety_level: critical
+
+SE_EKF_MAG_NED:
+  type: single
+  default: [33.9322, -1.4444, 38.2691]
+  unit: "uT"
+  group: ins_ekf
+  storage_class: ExportedGlobal
+  description: "本地地磁 NED 参考矢量（uT），15 态 EKF 磁力计融合的固定参考场（无磁场状态）。默认值 = WMM2025 成都（30.66N, 104.06E, 500m）计算值 [N;E;D]；部署时按当地磁场重新标定，与磁测/传感器侧量纲一致"
+  tunable_in_flight: false
+  safety_level: critical
+
+SE_EKF_GATE_GPS:
+  type: single
+  default: 25
+  unit: "Mahalanobis^2"
+  group: ins_ekf
+  storage_class: ExportedGlobal
+  description: "GPS 位置/速度测量的马氏距离平方野值门限（6D，chi2(6,0.999)~22.5）；innov'*inv(S)*innov 超此值则本拍 GPS 更新跳过"
+  tunable_in_flight: false
+  safety_level: critical
+
+SE_EKF_GATE_BARO:
+  type: single
+  default: 12
+  unit: "Mahalanobis^2"
+  group: ins_ekf
+  storage_class: ExportedGlobal
+  description: "气压高度测量的马氏距离平方野值门限（1D，chi2(1,0.999)~10.8）；超门限则本拍气压更新跳过"
+  tunable_in_flight: false
+  safety_level: critical
+
+SE_EKF_GATE_MAG:
+  type: single
+  default: 300
+  unit: "Mahalanobis^2"
+  group: ins_ekf
+  storage_class: ExportedGlobal
+  description: "磁力计体轴测量的马氏距离平方野值门限（3D）。冷启动 20deg 航向误差 d2~190 需放行收敛（否则 P 已收敛而误差未修正时全被拒）；10x 场强野值 d2~8000 仍被拒。稳态可收紧至 chi2(3,0.999)~16。"
+  tunable_in_flight: false
+  safety_level: critical
+SE_EKF_R_BARO:
+  type: single
+  default: 1.0
+  unit: "m^2"
+  group: ins_ekf
+  storage_class: ExportedGlobal
+  description: "气压计高度测量噪声方差（经 ISA 反算为 NED 下向位置后直接修正 Position_D）"
+  tunable_in_flight: false
+  safety_level: routine
+
+SE_BARO_QNH:
+  type: single
+  default: 101325.0
+  unit: "Pa"
+  group: ins_ekf
+  storage_class: ExportedGlobal
+  description: "估计器侧海平面标准气压参考，用于静压→高度反算。与 SensorDict 的 BARO_QNH 语义一致但分属两侧，不互相读取。"
+  tunable_in_flight: false
+  safety_level: critical
+
+SE_BARO_REF_ALT:
+  type: single
+  default: 0.0
+  unit: "m"
+  group: ins_ekf
+  storage_class: ExportedGlobal
+  description: "本地 NED 原点海拔。Position_D = SE_BARO_REF_ALT - h_ISA(P)"
+  tunable_in_flight: false
+  safety_level: critical
+
+SE_ISA_H_SCALE:
+  type: single
+  default: 44330.769
+  unit: "m"
+  group: ins_ekf
+  storage_class: ExportedGlobal
+  description: "ISA 对流层反算尺度 T0/L = 288.15/0.0065，h = SE_ISA_H_SCALE*(1-(P/QNH)^SE_ISA_EXPONENT)"
+  tunable_in_flight: false
+  safety_level: routine
+
+SE_ISA_EXPONENT:
+  type: single
+  default: 0.190263
+  unit: "-"
+  group: ins_ekf
+  storage_class: ExportedGlobal
+  description: "ISA 对流层反算指数 R*L/g0 = 287.05287*0.0065/9.80665"
+  tunable_in_flight: false
+  safety_level: routine
+
+# =============================================================================
+# 延迟融合（环形缓冲 + 时间对齐）参数 — 仅 DelaySched.slx 使用
+# =============================================================================
+# 语义与 PX4 EKF2 对应：DELAY_MAX ~ EKF2_DELAY_MAX；*_DELAY ~ EKF2_*_DELAY。
+# 时间单位统一为微秒。契约 Timestamp 为秒，模型内换算 round(Timestamp*1e6)。
+# 三个 *_DELAY 是 sensor 侧标称延迟在估计器侧的**镜像**：数值取自 sensor 模块
+# 定义（SensorDict 的 *_LATENCY_US），语义一致但分属两侧、不互相读取
+# —— 沿用 SE_BARO_QNH 与 SensorDict.BARO_QNH 的既有先例。
+# 约束：SE_EKF_DELAY_MAX_US >= max(三个延迟)。
+
+SE_EKF_DELAY_MAX_US:
+  type: single
+  default: 30000
+  unit: "us"
+  group: ins_ekf
+  storage_class: ExportedGlobal
+  description: "融合时间地平线延迟（PX4 EKF2_DELAY_MAX）；必须 >= 各传感器标称延迟最大值"
+  tunable_in_flight: false
+  safety_level: critical
+
+SE_EKF_MAX_LATE_US:
+  type: single
+  default: 30000
+  unit: "us"
+  group: ins_ekf
+  storage_class: ExportedGlobal
+  description: "校正后时刻早于地平线超过此值的测量丢弃（不回放状态）"
+  tunable_in_flight: false
+  safety_level: routine
+
+SE_EKF_IMU_SAMPLE_TIME_US:
+  type: single
+  default: 1000
+  unit: "us"
+  group: ins_ekf
+  storage_class: ExportedGlobal
+  description: "IMU 周期（微秒），供环形缓冲首拍 dt 兜底；与 SE_IMU_SAMPLE_TIME 同一物理量的微秒表示"
+  tunable_in_flight: false
+  safety_level: critical
+
+SE_EKF_IMU_BUF_LEN:
+  type: single
+  default: 48
+  unit: ""
+  group: ins_ekf
+  storage_class: ExportedGlobal
+  description: "IMU 环形缓冲容量；须满足 (容量-1)*IMU周期 >= DELAY_MAX + 余量"
+  tunable_in_flight: false
+  safety_level: critical
+
+SE_EKF_MEAS_BUF_LEN:
+  type: single
+  default: 8
+  unit: ""
+  group: ins_ekf
+  storage_class: ExportedGlobal
+  description: "每路测量环形缓冲容量"
+  tunable_in_flight: false
+  safety_level: routine
+
+SE_EKF_MAX_FUSE_PER_TICK:
+  type: single
+  default: 1
+  unit: ""
+  group: ins_ekf
+  storage_class: ExportedGlobal
+  description: "每拍每路最多出队样本数，界定单拍计算量"
+  tunable_in_flight: false
+  safety_level: routine
+
+SE_GPS_DELAY_US:
+  type: single
+  default: 20000
+  unit: "us"
+  group: ins_ekf
+  storage_class: ExportedGlobal
+  description: "GPS 标称测量延迟（镜像 SensorDict 的 GPS_LATENCY_US；PX4 EKF2_GPS_DELAY）"
+  tunable_in_flight: false
+  safety_level: critical
+
+SE_BARO_DELAY_US:
+  type: single
+  default: 5000
+  unit: "us"
+  group: ins_ekf
+  storage_class: ExportedGlobal
+  description: "气压计标称测量延迟（镜像 SensorDict 的 BARO_LATENCY_US；PX4 EKF2_BARO_DELAY）"
+  tunable_in_flight: false
+  safety_level: critical
+
+SE_MAG_DELAY_US:
+  type: single
+  default: 10000
+  unit: "us"
+  group: ins_ekf
+  storage_class: ExportedGlobal
+  description: "磁强计标称测量延迟（镜像 SensorDict 的 MAG_LATENCY_US；PX4 EKF2_MAG_DELAY）"
+  tunable_in_flight: false
+  safety_level: critical
+
+# =============================================================================
+# 延迟融合输出互补外推参数 — 仅 INS_EKF_PX4.slx 使用
+# =============================================================================
+# 输出预测器机制（PX4 ECL OutputPredictor）：
+#   - 每拍用最新 IMU 外推输出状态 x_out（实时性）；
+#   - 融合更新增量 Δx（观测信息，与时刻无关）全量同步到 x_out（不塌陷）；
+#   - 本参数仅用于"位置残余低通"：融合位置用融合速度前推 DelayMax 补偿延迟后
+#     与输出位置求差，按此增益混回，防 IMU 外推长期漂移（output_tracking_error 路径）。
+# 标定：gain = dt/TAU（TAU≈0.5 s @ 1 kHz ⇒ 0.002）。0 = 关闭残余项。
+# 注意：旧语义"融合状态−输出状态绝对差按增益混回"会塌回延迟状态，已废弃。
+
+SE_EKF_OUTPUT_GAIN:
+  type: single
+  default: 0.002
+  min: 0.0
+  max: 0.1
+  unit: "-"
+  group: ins_ekf
+  storage_class: ExportedGlobal
+  description: "输出位置残余低通增益（PX4 output_tracking_error 路径）。融合位置前推补偿延迟后与输出位置求差按此增益混回，防长期漂移；标定 dt/TAU（TAU≈0.5s @1kHz ⇒ 0.002）"
+  tunable_in_flight: false
+  safety_level: routine

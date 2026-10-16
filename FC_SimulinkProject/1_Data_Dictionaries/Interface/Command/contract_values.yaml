@@ -1,0 +1,16 @@
+_meta:
+  dict_name: CommandContractDict.sldd
+  dict_path: 1_Data_Dictionaries/Contracts/Command
+  description: "FlightCore 共享模块与命令枚举值"
+  references: []
+
+ModuleId_Gateway: {type: uint8, default: 1, storage_class: ExportedGlobal, description: "Gateway 逻辑模块 ID"}
+ModuleId_Commander: {type: uint8, default: 2, storage_class: ExportedGlobal, description: "Commander 逻辑模块 ID"}
+ModuleId_MissionManager: {type: uint8, default: 3, storage_class: ExportedGlobal, description: "MissionManager 逻辑模块 ID"}
+Command_Disarm: {type: uint8, default: 1, storage_class: ExportedGlobal, description: "第一阶段解除武装命令"}
+Command_Arm: {type: uint8, default: 2, storage_class: ExportedGlobal, description: "第一阶段武装命令"}
+Command_StartMission: {type: uint8, default: 3, storage_class: ExportedGlobal, description: "第一阶段开始任务命令"}
+Command_ReturnToLaunch: {type: uint8, default: 4, storage_class: ExportedGlobal, description: "后置占位：返航"}
+Command_LandAtCurrentPosition: {type: uint8, default: 5, storage_class: ExportedGlobal, description: "后置占位：当前位置降落"}
+Command_HoldPosition: {type: uint8, default: 6, storage_class: ExportedGlobal, description: "后置占位：定点保持"}
+Command_GoToPoint: {type: uint8, default: 7, storage_class: ExportedGlobal, description: "后置占位：飞向指定点"}
